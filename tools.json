@@ -1,0 +1,191 @@
+{
+  "tools": [
+    {
+      "name": "peass-ng",
+      "type": "release",
+      "repo": "peass-ng/PEASS-ng",
+      "assets": ["^winPEASx86\\.exe$", "^winPEASx64\\.exe$", "^linpeas\\.sh$"]
+    },
+    {
+      "name": "pretender",
+      "type": "release",
+      "repo": "RedTeamPentesting/pretender",
+      "assets": ["^pretender_Linux_x86_64\\.tar\\.gz$", "^pretender_Windows_x86_64\\.zip$"]
+    },
+    {
+      "name": "inveigh",
+      "type": "release",
+      "repo": "Kevin-Robertson/Inveigh",
+      "assets": ["^Inveigh-net10\\.0-win-x64-trimmed-single-.*\\.zip$"]
+    },
+    {
+      "name": "kerbrute",
+      "type": "release",
+      "repo": "ropnop/kerbrute",
+      "assets": ["^kerbrute_linux_amd64$"]
+    },
+    {
+      "name": "snaffler",
+      "type": "release",
+      "repo": "SnaffCon/Snaffler",
+      "assets": ["^Snaffler\\.exe$"]
+    },
+    {
+      "name": "hackbrowserdata",
+      "type": "release",
+      "repo": "moonD4rk/HackBrowserData",
+      "assets": ["windows-64bit\\.zip$"]
+    },
+    {
+      "name": "lazagne",
+      "type": "release",
+      "repo": "AlessandroZ/LaZagne",
+      "assets": ["^LaZagne\\.exe$"]
+    },
+    {
+      "name": "runascs",
+      "type": "release",
+      "repo": "antonioCoco/RunasCs",
+      "assets": ["^RunasCs\\.zip$"]
+    },
+    {
+      "name": "bloodhound-cli",
+      "type": "release",
+      "repo": "SpecterOps/bloodhound-cli",
+      "assets": ["linux-amd64\\.tar\\.gz$"]
+    },
+    {
+      "name": "petitpotam",
+      "type": "file",
+      "repo": "topotam/PetitPotam",
+      "ref": "main",
+      "paths": ["PetitPotam.py"]
+    },
+    {
+      "name": "wwwolf-webshell",
+      "type": "file",
+      "repo": "WhiteWinterWolf/wwwolf-php-webshell",
+      "ref": "master",
+      "paths": ["webshell.php"]
+    },
+    {
+      "name": "static-binaries",
+      "type": "file",
+      "repo": "andrew-d/static-binaries",
+      "ref": "master",
+      "paths": [
+        "binaries/linux/x86_64/socat",
+        "binaries/linux/x86_64/nmap"
+      ]
+    },
+    {
+      "name": "likely-usernames",
+      "type": "file",
+      "repo": "insidetrust/statistically-likely-usernames",
+      "ref": "master",
+      "paths": ["jsmith.txt", "jsmith2.txt", "john.smith.txt", "johnsmith.txt"]
+    },
+    {
+      "name": "domainpasswordspray",
+      "type": "file",
+      "repo": "dafthack/DomainPasswordSpray",
+      "ref": "master",
+      "paths": ["DomainPasswordSpray.ps1"]
+    },
+    {
+      "name": "krbrelayx-printerbug",
+      "type": "file",
+      "repo": "dirkjanm/krbrelayx",
+      "ref": "master",
+      "paths": ["printerbug.py"]
+    },
+    {
+      "name": "cve-2020-1472",
+      "type": "file",
+      "repo": "dirkjanm/CVE-2020-1472",
+      "ref": "master",
+      "paths": ["cve-2020-1472-exploit.py"]
+    },
+    {
+      "name": "dfscoerce",
+      "type": "file",
+      "repo": "Wh04m1001/DFSCoerce",
+      "ref": "main",
+      "paths": ["dfscoerce.py"]
+    },
+    {
+      "name": "shadowcoerce",
+      "type": "file",
+      "repo": "ShutdownRepo/ShadowCoerce",
+      "ref": "main",
+      "paths": ["shadowcoerce.py"]
+    },
+    {
+      "name": "smtp-user-enum",
+      "type": "file",
+      "repo": "cytopia/smtp-user-enum",
+      "ref": "master",
+      "paths": ["smtp-user-enum"]
+    },
+    {
+      "name": "ghostpack-compiled",
+      "type": "file",
+      "repo": "r3motecontrol/Ghostpack-CompiledBinaries",
+      "ref": "master",
+      "paths": ["Seatbelt.exe", "SharpUp.exe"]
+    },
+    {
+      "name": "powerhuntshares",
+      "type": "file",
+      "repo": "NetSPI/PowerHuntShares",
+      "ref": "main",
+      "paths": ["PowerHuntShares.psm1"]
+    },
+    {
+      "name": "pssqlite",
+      "type": "file",
+      "repo": "RamblingCookieMonster/PSSQLite",
+      "ref": "master",
+      "paths": ["PSSQLite/PSSQLite.psd1"]
+    },
+    {
+      "name": "firefox_decrypt",
+      "type": "file",
+      "repo": "unode/firefox_decrypt",
+      "ref": "main",
+      "paths": ["firefox_decrypt.py"]
+    },
+    {
+      "name": "powersploit",
+      "type": "file",
+      "repo": "PowerShellMafia/PowerSploit",
+      "ref": "master",
+      "paths": ["Privesc/PowerUp.ps1", "Recon/PowerView.ps1"]
+    },
+    {
+      "name": "lapstoolkit",
+      "type": "file",
+      "repo": "leoloobeek/LAPSToolkit",
+      "ref": "master",
+      "paths": ["LAPSToolkit.ps1"]
+    },
+    {
+      "name": "ligolo-ng",
+      "type": "repo",
+      "repo": "nicocha30/ligolo-ng",
+      "ref": "master"
+    },
+    {
+      "name": "static-netcat",
+      "type": "file",
+      "repo": "mermehr/static-binaries",
+      "ref": "main",
+      "paths": [
+        "binaries/nc/nc-x64",
+        "binaries/nc/nc-x86",
+        "binaries/nc/nc-x64.exe",
+        "binaries/nc/nc-x86.exe"
+      ]
+    }
+  ]
+}
