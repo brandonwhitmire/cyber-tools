@@ -170,6 +170,70 @@
       "paths": ["LAPSToolkit.ps1"]
     },
     {
+      "name": "roothound",
+      "type": "file",
+      "repo": "Noz2/RootHound",
+      "ref": "master",
+      "paths": ["RootHound.py", "HoundCollector.sh"]
+    },
+    {
+      "name": "pspy",
+      "type": "release",
+      "repo": "DominicBreuker/pspy",
+      "assets": ["^pspy32$", "^pspy64$"]
+    },
+    {
+      "name": "linenum",
+      "type": "file",
+      "repo": "rebootuser/LinEnum",
+      "ref": "master",
+      "paths": ["LinEnum.sh"]
+    },
+    {
+      "name": "linux-smart-enumeration",
+      "type": "file",
+      "repo": "diego-treitos/linux-smart-enumeration",
+      "ref": "master",
+      "paths": ["lse.sh"]
+    },
+    {
+      "name": "printspoofer",
+      "type": "release",
+      "repo": "itm4n/PrintSpoofer",
+      "assets": ["^PrintSpoofer32\\.exe$", "^PrintSpoofer64\\.exe$"]
+    },
+    {
+      "name": "godpotato",
+      "type": "release",
+      "repo": "BeichenDream/GodPotato",
+      "assets": ["^GodPotato-NET2\\.exe$", "^GodPotato-NET35\\.exe$", "^GodPotato-NET4\\.exe$"]
+    },
+    {
+      "name": "juicy-potato",
+      "type": "release",
+      "repo": "ohpe/juicy-potato",
+      "assets": ["^JuicyPotato\\.exe$"]
+    },
+    {
+      "name": "sweetpotato",
+      "type": "file",
+      "repo": "uknowsec/SweetPotato",
+      "ref": "master",
+      "paths": ["SweetPotato-Webshell-new/bin/Release/SweetPotato.exe"]
+    },
+    {
+      "name": "roguepotato",
+      "type": "release",
+      "repo": "antonioCoco/RoguePotato",
+      "assets": ["^RoguePotato\\.zip$"]
+    },
+    {
+      "name": "static-python",
+      "type": "release",
+      "repo": "indygreg/python-build-standalone",
+      "assets": ["^cpython-3\\.11\\..*-x86_64-pc-windows-msvc-install_only\\.tar\\.gz$"]
+    },
+    {
       "name": "ligolo-ng",
       "type": "repo",
       "repo": "nicocha30/ligolo-ng",
