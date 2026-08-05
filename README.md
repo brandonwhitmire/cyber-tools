@@ -1,11 +1,11 @@
-# meta-tools
+# cyber-tools
 
 Offline vendoring repository for curated cybersecurity tools. A manifest declares each tool and how to fetch it; a sync engine pulls updates; a scheduled GitHub Action commits only when something actually changed.
 
 ## Layout
 
 ```
-meta-tools/
+cyber-tools/
 ├── tools.json                  # declare each tool + how to grab it
 ├── sync.sh                     # the sync engine
 ├── .github/workflows/sync.yml  # daily cron + manual trigger
