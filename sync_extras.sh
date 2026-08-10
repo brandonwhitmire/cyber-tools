@@ -31,7 +31,8 @@ find "${TOOLS_DIR}" -maxdepth 1 -type f \( \
   -name 'nc-x64' -o -name 'nc-x86' -o \
   -name 'socat' -o -name 'nmap' -o \
   -name 'smtp-user-enum.py' -o \
-  -name 'roothound-collector.sh' -o -name 'pretender' -o -name 'bloodhound-cli' \
+  -name 'roothound-collector.sh' -o -name 'pretender' -o -name 'bloodhound-cli' -o \
+  -name 'ligolo-agent' -o -name 'ligolo-proxy' \
 \) -exec chmod +x {} + 2>/dev/null || true
 
 chmod +x "${ROOT}/sync_tools.sh" "${ROOT}/deliver_tools.sh" "${ROOT}/sync_extras.sh" 2>/dev/null || true

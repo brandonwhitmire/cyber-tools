@@ -39,13 +39,14 @@ SERVE_DIR=./tools SERVER_IP=0.0.0.0 HTTP_PORT=8080 SMB_SHARE=tools SMB_USER=gues
 
 ## Acquisition strategies
 
-Each entry in `sync.json` uses a `type` that selects one of three strategies:
+Each entry in `sync.json` uses a `type` that selects one of four strategies:
 
 | Type | What it does |
 |------|--------------|
 | `release` | Fetches matching assets from the latest GitHub Release into `tools/` |
 | `file` | Raw-downloads specific file(s) from a repo at a given ref into `tools/` |
 | `repo` | Shallow-clones the repo into `tools/<name>/` and strips `.git` |
+| `build` | Temp-clones the repo, runs `commands`, keeps only `artifacts` in `tools/` |
 
 Optional per-tool `rename` map rewrites each matched asset basename (regex → dest name). Use `"$lower"` to lowercase the matched name (current default for all tools).
 
@@ -90,10 +91,37 @@ Add one JSON object to the `tools` array in `sync.json`. No script edits require
 
 ```json
 {
-  "name": "ligolo-ng",
+  "name": "my-scripts",
   "type": "repo",
-  "repo": "nicocha30/ligolo-ng",
+  "repo": "owner/repo",
   "ref": "master"
+}
+```
+
+### Build (temp clone → compile → keep binaries)
+
+Requires build tooling on the runner (e.g. Go + UPX for ligolo-ng). The clone is discarded after artifacts are copied.
+
+```json
+{
+  "name": "ligolo-ng",
+  "type": "build",
+  "repo": "nicocha30/ligolo-ng",
+  "ref": "master",
+  "commands": [
+    "CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags=\"-s -w\" -o agent.exe cmd/agent/main.go",
+    "CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags=\"-s -w\" -o proxy.exe cmd/proxy/main.go",
+    "CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags=\"-s -w\" -o agent cmd/agent/main.go",
+    "CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags=\"-s -w\" -o proxy cmd/proxy/main.go",
+    "upx --lzma agent.exe proxy.exe agent proxy"
+  ],
+  "artifacts": ["^agent$", "^agent\\.exe$", "^proxy$", "^proxy\\.exe$"],
+  "rename": {
+    "^agent$": "ligolo-agent",
+    "^agent\\.exe$": "ligolo-agent.exe",
+    "^proxy$": "ligolo-proxy",
+    "^proxy\\.exe$": "ligolo-proxy.exe"
+  }
 }
 ```
 
@@ -115,7 +143,7 @@ GITHUB_TOKEN=<PAT> ./sync_tools.sh
 
 ## GitHub Action setup
 
-The workflow runs twice a week (Monday and Thursday at 06:00 UTC) and on manual trigger (`workflow_dispatch`). It runs `sync_tools.sh`, stages all changes, and commits/pushes only when `git diff --cached` is non-empty.
+The workflow runs twice a week (Monday and Thursday at 06:00 UTC) and on manual trigger (`workflow_dispatch`). It installs **Go** and **UPX** (needed for `type: build` tools like ligolo-ng), runs `sync_tools.sh`, stages all changes, and commits/pushes only when `git diff --cached` is non-empty.
 
 **Required repo setting:** Settings → Actions → General → Workflow permissions → **Read and write permissions**.
 
@@ -143,7 +171,10 @@ The workflow runs twice a week (Monday and Thursday at 06:00 UTC) and on manual 
 | `kerbrute_windows_amd64.exe` | [Kerberos user enum (Windows)](https://github.com/ropnop/kerbrute) |
 | `lapstoolkit.ps1` | [LAPS enumeration toolkit](https://github.com/leoloobeek/LAPSToolkit) |
 | `lazagne.exe` | [Credential recovery tool](https://github.com/AlessandroZ/LaZagne) |
-| `ligolo-ng/` | [Tunneling / pivoting toolkit](https://github.com/nicocha30/ligolo-ng) |
+| `ligolo-agent` | [Ligolo-ng agent (Linux)](https://github.com/nicocha30/ligolo-ng) |
+| `ligolo-agent.exe` | [Ligolo-ng agent (Windows)](https://github.com/nicocha30/ligolo-ng) |
+| `ligolo-proxy` | [Ligolo-ng proxy (Linux)](https://github.com/nicocha30/ligolo-ng) |
+| `ligolo-proxy.exe` | [Ligolo-ng proxy (Windows)](https://github.com/nicocha30/ligolo-ng) |
 | `linpeas.sh` | [Linux priv-esc enumerator](https://github.com/peass-ng/PEASS-ng) |
 | `lse.sh` | [Linux smart enumeration](https://github.com/diego-treitos/linux-smart-enumeration) |
 | `nc-x64` | [Static netcat Linux x64](https://github.com/mermehr/static-binaries) |

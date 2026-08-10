@@ -200,7 +200,73 @@ sync_repo() {
   log "repo: ${name}: done"
 }
 
-# TODO(stretch): per-tool post-fetch build hook (compile Go/Rust tools before commit).
+# Clone repo to a temp dir, run build commands, keep only matching artifacts in tools/.
+# Args: name repo ref rename_json commands_json -- artifact_regexes...
+sync_build() {
+  local name=$1 repo=$2 ref=$3 rename_json=$4 commands_json=$5
+  shift 5
+  [[ "${1:-}" == "--" ]] || die "build: ${name}: internal arg parse error"
+  shift
+  local artifact_patterns=("$@")
+  local clone_url="https://github.com/${repo}.git"
+  local tmp cmd kept=0
+
+  [[ "${#artifact_patterns[@]}" -gt 0 ]] || die "build: ${name}: artifacts (regex list) is required"
+
+  log "build: ${name} (${repo}@${ref})"
+  tmp="$(mktemp -d "${TOOLS_DIR}/.build.XXXXXX")"
+
+  log "build: ${name}: cloning"
+  if ! git clone --depth 1 --branch "$ref" "$clone_url" "${tmp}/src"; then
+    rm -rf "$tmp"
+    die "build: ${name}: git clone failed"
+  fi
+
+  # shellcheck disable=SC2164
+  local build_cwd
+  build_cwd="$(pwd)"
+  cd "${tmp}/src"
+
+  local i=0
+  while IFS= read -r cmd; do
+    [[ -n "$cmd" ]] || continue
+    i=$((i + 1))
+    log "build: ${name}: [${i}] ${cmd}"
+    # bash -c (not -lc) so we keep the repo cwd; env assignments still work.
+    if ! bash -c "$cmd"; then
+      cd "$build_cwd"
+      rm -rf "$tmp"
+      die "build: ${name}: command failed: ${cmd}"
+    fi
+  done < <(echo "$commands_json" | jq -r '.[]')
+
+  cd "$build_cwd"
+
+  local file base dest pattern
+  while IFS= read -r -d '' file; do
+    base="$(basename "$file")"
+    for pattern in "${artifact_patterns[@]}"; do
+      if [[ "$base" =~ $pattern ]]; then
+        dest="$(resolve_rename "$base" "$rename_json")"
+        log "build: ${name}: keeping ${base} -> ${dest}"
+        mv -f "$file" "${TOOLS_DIR}/${dest}"
+        # Linux/ELF binaries (no extension) should be executable in the vendored tree
+        if [[ "$dest" != *.* ]]; then
+          chmod +x "${TOOLS_DIR}/${dest}" || true
+        fi
+        kept=$((kept + 1))
+        break
+      fi
+    done
+  done < <(find "${tmp}/src" -maxdepth 1 -type f -print0)
+
+  rm -rf "$tmp"
+  # Also remove any leftover full-repo checkout from an older sync
+  rm -rf "${TOOLS_DIR}/${name}"
+
+  [[ "$kept" -gt 0 ]] || die "build: ${name}: no artifacts matched patterns"
+  log "build: ${name}: done (${kept} artifact(s))"
+}
 
 main() {
   local count
@@ -246,6 +312,17 @@ main() {
         local ref
         ref="$(echo "$tool" | jq -r '.ref // "main"')"
         sync_repo "$name" "$repo" "$ref"
+        ;;
+      build)
+        local ref commands_json
+        ref="$(echo "$tool" | jq -r '.ref // "main"')"
+        echo "$tool" | jq -e '.commands | type == "array" and length > 0' >/dev/null \
+          || die "build: ${name}: commands (non-empty array) is required"
+        echo "$tool" | jq -e '.artifacts | type == "array" and length > 0' >/dev/null \
+          || die "build: ${name}: artifacts (non-empty array of regexes) is required"
+        commands_json="$(echo "$tool" | jq -c '.commands')"
+        mapfile -t artifacts < <(echo "$tool" | jq -r '.artifacts[]')
+        sync_build "$name" "$repo" "$ref" "$rename_json" "$commands_json" -- "${artifacts[@]}"
         ;;
       *)
         log "WARN: unknown type '${type}' for tool '${name}', skipping"

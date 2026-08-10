@@ -407,9 +407,28 @@
     },
     {
       "name": "ligolo-ng",
-      "type": "repo",
+      "type": "build",
       "repo": "nicocha30/ligolo-ng",
-      "ref": "master"
+      "ref": "master",
+      "commands": [
+        "CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags=\"-s -w\" -o agent.exe cmd/agent/main.go",
+        "CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags=\"-s -w\" -o proxy.exe cmd/proxy/main.go",
+        "CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags=\"-s -w\" -o agent cmd/agent/main.go",
+        "CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags=\"-s -w\" -o proxy cmd/proxy/main.go",
+        "upx --lzma agent.exe proxy.exe agent proxy"
+      ],
+      "artifacts": [
+        "^agent$",
+        "^agent\\.exe$",
+        "^proxy$",
+        "^proxy\\.exe$"
+      ],
+      "rename": {
+        "^agent$": "ligolo-agent",
+        "^agent\\.exe$": "ligolo-agent.exe",
+        "^proxy$": "ligolo-proxy",
+        "^proxy\\.exe$": "ligolo-proxy.exe"
+      }
     },
     {
       "name": "static-netcat",
