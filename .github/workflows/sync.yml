@@ -2,7 +2,8 @@ name: Sync vendored tools
 
 on:
   schedule:
-    - cron: "0 6 * * *"
+    # Twice a week: Monday and Thursday at 06:00 UTC
+    - cron: "0 6 * * 1,4"
   workflow_dispatch:
 
 permissions:
@@ -18,7 +19,7 @@ jobs:
       - name: Run sync
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./sync.sh
+        run: ./tool_sync.sh
 
       - name: Commit and push if changed
         run: |

