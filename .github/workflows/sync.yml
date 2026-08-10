@@ -19,7 +19,7 @@ jobs:
       - name: Run sync
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tool_sync.sh
+        run: ./sync_tools.sh
 
       - name: Commit and push if changed
         run: |

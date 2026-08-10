@@ -26,7 +26,12 @@
       "rename": {
         "^pretender_Linux_x86_64\\.tar\\.gz$": "$lower",
         "^pretender_Windows_x86_64\\.zip$": "$lower"
-      }
+      },
+      "extract": true,
+      "extract_keep": [
+        "^pretender$",
+        "^pretender\\.exe$"
+      ]
     },
     {
       "name": "inveigh",
@@ -37,7 +42,11 @@
       ],
       "rename": {
         "^Inveigh-net10\\.0-win-x64-trimmed-single-.*\\.zip$": "$lower"
-      }
+      },
+      "extract": true,
+      "extract_keep": [
+        "^Inveigh\\.exe$"
+      ]
     },
     {
       "name": "kerbrute",
@@ -72,7 +81,11 @@
       ],
       "rename": {
         "windows-64bit\\.zip$": "$lower"
-      }
+      },
+      "extract": true,
+      "extract_keep": [
+        "^hack-browser-data\\.exe$"
+      ]
     },
     {
       "name": "lazagne",
@@ -94,7 +107,12 @@
       ],
       "rename": {
         "^RunasCs\\.zip$": "$lower"
-      }
+      },
+      "extract": true,
+      "extract_keep": [
+        "^RunasCs\\.exe$",
+        "^RunasCs_net2\\.exe$"
+      ]
     },
     {
       "name": "bloodhound-cli",
@@ -105,7 +123,11 @@
       ],
       "rename": {
         "linux-amd64\\.tar\\.gz$": "$lower"
-      }
+      },
+      "extract": true,
+      "extract_keep": [
+        "^bloodhound-cli$"
+      ]
     },
     {
       "name": "static-binaries",
@@ -187,7 +209,7 @@
         "smtp-user-enum"
       ],
       "rename": {
-        "^smtp-user-enum$": "$lower"
+        "^smtp-user-enum$": "smtp-user-enum.py"
       }
     },
     {
@@ -277,7 +299,7 @@
       ],
       "rename": {
         "^RootHound\\.py$": "$lower",
-        "^HoundCollector\\.sh$": "$lower"
+        "^HoundCollector\\.sh$": "roothound-collector.sh"
       }
     },
     {
@@ -365,7 +387,12 @@
       ],
       "rename": {
         "^RoguePotato\\.zip$": "$lower"
-      }
+      },
+      "extract": true,
+      "extract_keep": [
+        "^RoguePotato\\.exe$",
+        "^RogueOxidResolver\\.exe$"
+      ]
     },
     {
       "name": "static-python",

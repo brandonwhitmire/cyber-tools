@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MANIFEST="${1:-tools.json}"
+MANIFEST="${1:-sync.json}"
 TOOLS_DIR="tools"
 
-log() { echo "[tool_sync] $*" >&2; }
-die() { echo "[tool_sync] ERROR: $*" >&2; exit 1; }
+log() { echo "[sync_tools] $*" >&2; }
+die() { echo "[sync_tools] ERROR: $*" >&2; exit 1; }
 
 require_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"
@@ -57,10 +57,71 @@ resolve_rename() {
   printf '%s' "$original"
 }
 
+# Extract archive into tools/, keeping only basenames matching extract_keep regexes.
+# Deletes the archive afterward. Kept files are written lowercase into TOOLS_DIR.
+extract_archive() {
+  local archive=$1
+  shift
+  local keep_patterns=("$@")
+  local archive_path="${TOOLS_DIR}/${archive}"
+  local tmp kept=0
+
+  [[ -f "$archive_path" ]] || die "extract: archive not found: ${archive_path}"
+  [[ "${#keep_patterns[@]}" -gt 0 ]] || die "extract: ${archive}: extract_keep is required when extract=true"
+
+  tmp="$(mktemp -d "${TOOLS_DIR}/.extract.XXXXXX")"
+
+  case "${archive,,}" in
+    *.zip)
+      require_cmd unzip
+      unzip -q -o "$archive_path" -d "$tmp"
+      ;;
+    *.tar.gz|*.tgz)
+      tar --no-same-owner -xzf "$archive_path" -C "$tmp"
+      ;;
+    *.tar)
+      tar --no-same-owner -xf "$archive_path" -C "$tmp"
+      ;;
+    *)
+      die "extract: unsupported archive type: ${archive}"
+      ;;
+  esac
+
+  local file base dest pattern
+  while IFS= read -r -d '' file; do
+    base="$(basename "$file")"
+    for pattern in "${keep_patterns[@]}"; do
+      if [[ "$base" =~ $pattern ]]; then
+        dest="${base,,}"
+        log "extract: ${archive}: keeping ${base} -> ${dest}"
+        mv -f "$file" "${TOOLS_DIR}/${dest}"
+        kept=$((kept + 1))
+        break
+      fi
+    done
+  done < <(find "$tmp" -type f -print0)
+
+  [[ "$kept" -gt 0 ]] || { rm -rf "$tmp"; die "extract: ${archive}: no files matched extract_keep patterns"; }
+  rm -rf "$tmp"
+  rm -f "$archive_path"
+  log "extract: ${archive}: done (${kept} file(s))"
+}
+
 sync_release() {
-  local name=$1 repo=$2 rename_json=$3
-  shift 3
-  local asset_patterns=("$@")
+  local name=$1 repo=$2 rename_json=$3 do_extract=$4
+  shift 4
+  local keep_patterns=()
+  local asset_patterns=()
+
+  # Remaining args: keep patterns, then "--", then asset patterns
+  while [[ $# -gt 0 && "$1" != "--" ]]; do
+    keep_patterns+=("$1")
+    shift
+  done
+  [[ $# -gt 0 && "$1" == "--" ]] || die "release: ${name}: internal arg parse error"
+  shift
+  asset_patterns=("$@")
+
   local api_url="https://api.github.com/repos/${repo}/releases/latest"
 
   log "release: ${name} (${repo})"
@@ -97,6 +158,10 @@ sync_release() {
     log "release: ${name}: downloading ${asset_name} -> ${dest_name}"
     curl -fsSL -o "${TOOLS_DIR}/${dest_name}" "$asset_url"
     downloaded=$((downloaded + 1))
+
+    if [[ "$do_extract" == "true" ]]; then
+      extract_archive "$dest_name" "${keep_patterns[@]}"
+    fi
   done <<< "$(echo "$release_json" | jq -c '.assets[]?')"
 
   [[ "$downloaded" -gt 0 ]] || die "release: ${name}: no assets matched patterns for ${tag}"
@@ -149,16 +214,27 @@ main() {
     local tool
     tool="$(jq -c ".tools[$i]" "$MANIFEST")"
 
-    local name type repo rename_json
+    local name type repo rename_json do_extract
     name="$(echo "$tool" | jq -r '.name')"
     type="$(echo "$tool" | jq -r '.type')"
     repo="$(echo "$tool" | jq -r '.repo')"
     rename_json="$(echo "$tool" | jq -c '.rename // {}')"
+    do_extract="$(echo "$tool" | jq -r '.extract // false')"
 
     case "$type" in
       release)
         mapfile -t assets < <(echo "$tool" | jq -r '.assets[]')
-        sync_release "$name" "$repo" "$rename_json" "${assets[@]}"
+        local keep_patterns=()
+        if [[ "$do_extract" == "true" ]]; then
+          if echo "$tool" | jq -e '.extract_keep | type == "array"' >/dev/null; then
+            mapfile -t keep_patterns < <(echo "$tool" | jq -r '.extract_keep[]')
+          elif echo "$tool" | jq -e '.extract_keep | type == "string"' >/dev/null; then
+            keep_patterns=("$(echo "$tool" | jq -r '.extract_keep')")
+          else
+            die "release: ${name}: extract=true requires extract_keep (string or array of regexes)"
+          fi
+        fi
+        sync_release "$name" "$repo" "$rename_json" "$do_extract" "${keep_patterns[@]}" -- "${assets[@]}"
         ;;
       file)
         local ref

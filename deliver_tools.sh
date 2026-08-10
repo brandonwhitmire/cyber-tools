@@ -10,8 +10,8 @@ SMB_SHARE="${SMB_SHARE:-tools}"
 SMB_USER="${SMB_USER:-guest}"
 SMB_PASS="${SMB_PASS:-guest}"
 
-log() { echo "[serve] $*" >&2; }
-die() { echo "[serve] ERROR: $*" >&2; exit 1; }
+log() { echo "[deliver_tools] $*" >&2; }
+die() { echo "[deliver_tools] ERROR: $*" >&2; exit 1; }
 
 [[ -d "$SERVE_DIR" ]] || die "serve directory not found: $SERVE_DIR"
 
