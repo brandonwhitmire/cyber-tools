@@ -212,7 +212,11 @@ def find_nss(locations: list[str], nssname: str) -> ct.CDLL:
     fail_errors: list[tuple[str, str]] = []
 
     OS = ("Windows", "Darwin")
-    sublocations = ("firefox", "thunderbird", "")
+    sublocations = (
+        "firefox",
+        "thunderbird",
+        "",
+    )
 
     for loc in locations:
         for subloc in sublocations:
@@ -283,6 +287,7 @@ def load_libnss():
 
     locations: list[str] = [
         os.environ.get("NSS_LIB_PATH", "."),
+        os.path.realpath(os.path.join(os.path.dirname(sys.executable), "../lib")),
     ]
 
     if SYSTEM == "Windows":
