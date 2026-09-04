@@ -35,9 +35,10 @@ find "${TOOLS_DIR}" -maxdepth 1 -type f \( \
   -name 'ligolo-agent' -o -name 'ligolo-proxy' \
 \) -exec chmod +x {} + 2>/dev/null || true
 
-chmod +x "${ROOT}/sync_tools.sh" "${ROOT}/deliver_tools.sh" "${ROOT}/sync_extras.sh" 2>/dev/null || true
+chmod +x "${ROOT}/sync_tools.sh" "${ROOT}/deliver_tools.sh" "${ROOT}/sync_extras.sh" "${ROOT}/tools.sh" 2>/dev/null || true
 
 log "sync_extras complete"
 log "  tools:     ${TOOLS_DIR}/"
 log "  accesschk: ${TOOLS_DIR}/accesschk.exe , ${TOOLS_DIR}/accesschk64.exe"
 log "  deliver:   ${ROOT}/deliver_tools.sh"
+log "  launcher:  ${ROOT}/tools.sh"

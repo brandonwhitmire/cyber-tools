@@ -14,6 +14,7 @@ cyber-tools/
 ├── sync_tools.sh              # the sync engine
 ├── sync_extras.sh             # sync + extras (AccessChk, extract Python)
 ├── deliver_tools.sh           # one-command HTTP + SMB staging server
+├── tools.sh                   # `tools` launcher (find repo + deliver)
 ├── .github/workflows/         # twice-weekly cron + manual trigger
 └── tools/                     # flat binaries/scripts; code repos keep their own folders
 ```
@@ -21,7 +22,7 @@ cyber-tools/
 ## Quick start
 
 ```bash
-chmod +x sync_tools.sh sync_extras.sh deliver_tools.sh
+chmod +x sync_tools.sh sync_extras.sh deliver_tools.sh tools.sh
 ./sync_extras.sh
 ```
 
@@ -33,9 +34,32 @@ GITHUB_TOKEN=<PAT> ./sync_extras.sh
 
 ## Staging server
 
+Prints the connect IP (not `0.0.0.0`), a compact file table, and pasteable wget / SMB commands. Replace `FILE` with a name from the table.
+
 ```bash
-SERVE_DIR=./tools SERVER_IP=0.0.0.0 HTTP_PORT=8080 SMB_SHARE=tools SMB_USER=guest SMB_PASS=guest ./deliver_tools.sh
+CONNECT_IP=10.10.14.5 SERVE_DIR=./tools SERVER_IP=0.0.0.0 HTTP_PORT=8080 SMB_PORT=445 SMB_SHARE=tools SMB_USER=guest SMB_PASS=guest ./deliver_tools.sh
 ```
+
+`CONNECT_IP` is optional — when unset, the script uses `SERVER_IP` if it is a real address, otherwise the default-route IPv4. Other local IPv4s are listed so you can pin `tun0` vs `eth0`.
+
+### `tools` command
+
+`tools/` is the payload directory, so the launcher is `tools.sh`. After install you type `tools`:
+
+```bash
+./tools.sh --install    # appends `source .../tools.sh` to ~/.zshrc or ~/.bashrc
+source ~/.zshrc         # or open a new terminal
+tools
+```
+
+Or source it yourself:
+
+```bash
+source /path/to/cyber-tools/tools.sh
+tools
+```
+
+The function finds the repo (or uses `CYBER_TOOLS_DIR`), `cd`s there, and runs `deliver_tools.sh`. Running `./tools.sh` directly does the same without changing your shell's cwd.
 
 ## Acquisition strategies
 
