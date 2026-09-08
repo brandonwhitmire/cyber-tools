@@ -171,6 +171,39 @@ The workflow runs twice a week (Monday and Thursday at 06:00 UTC) and on manual 
 
 **Required repo setting:** Settings → Actions → General → Workflow permissions → **Read and write permissions**.
 
+## Potatoes
+
+These binaries expect `SeImpersonatePrivilege` or `SeAssignPrimaryTokenPrivilege` (`whoami /priv`). If neither is present, they are not the path.
+
+### .NET version (pick the matching build)
+
+GodPotato and SigmaPotato ship multiple Framework builds. Check the target first:
+
+```cmd
+reg query "HKLM\SOFTWARE\Microsoft\NET Framework Setup\NDP" /s | findstr /i "version"
+```
+
+| Highest NDP version | Binary |
+|---------------------|--------|
+| v2.0.x | `godpotato-net2.exe` |
+| v3.5 | `godpotato-net35.exe` or `sigmapotatocore.exe` |
+| v4.x | `godpotato-net4.exe` or `sigmapotato.exe` |
+
+`sigmapotato.exe` is compiled against .NET 4.8 and runs on any Framework install. `sigmapotatocore.exe` needs 3.5 on disk (better for PowerShell Core reflection). `invoke-sigmapotato.ps1` is the in-memory helper.
+
+### Which potato
+
+| Binary | Year | Mechanism | Works on | Notes |
+|--------|------|-----------|----------|-------|
+| `juicypotato.exe` | 2018 | DCOM/NTLM via COM CLSID | Win 7 / Server 2008–2016 / Win 10 before 1809 | Dead after 1809 / Server 2019 |
+| `juicypotatong.exe` | 2022 | JuicyPotato successor | Win 10 1809+ / Server 2019+ | When classic Juicy is patched |
+| `roguepotato.exe` | 2020 | Fake OXID resolver + named pipe | Server 2019+, Win 10 1809+ | Needs outbound 135 redirect (`socat`) |
+| `sweetpotato.exe` | 2020 | DCOM / WinRM / EfsRpc + named pipe | Win 10, Server 2016/2019 | Multi-vector |
+| `godpotato-net*.exe` | 2022 | Named pipe RPC + OXID bypass | Server 2012–2022, Win 10/11 | Default; match .NET above |
+| `sigmapotato.exe` | 2023 | GodPotato fork + reflection | Win 8–11, Server 2012–2022 | Same OS range; in-memory via the `.ps1` |
+
+Flags and examples are in each upstream README (linked from the inventory).
+
 ## Tool inventory
 
 | Filename | Description |
@@ -186,11 +219,13 @@ The workflow runs twice a week (Monday and Thursday at 06:00 UTC) and on manual 
 | `godpotato-net4.exe` | [Potato priv-esc for .NET 4](https://github.com/BeichenDream/GodPotato) |
 | `hack-browser-data.exe` | [Browser credential extractor](https://github.com/moonD4rk/HackBrowserData) |
 | `inveigh.exe` | [Windows mitm/spoofing toolkit](https://github.com/Kevin-Robertson/Inveigh) |
+| `invoke-sigmapotato.ps1` | [SigmaPotato in-memory helper](https://github.com/tylerdotrar/SigmaPotato) |
 | `john.smith.txt` | [Likely username wordlist](https://github.com/insidetrust/statistically-likely-usernames) |
 | `johnsmith.txt` | [Likely username wordlist](https://github.com/insidetrust/statistically-likely-usernames) |
 | `jsmith.txt` | [Likely username wordlist](https://github.com/insidetrust/statistically-likely-usernames) |
 | `jsmith2.txt` | [Likely username wordlist](https://github.com/insidetrust/statistically-likely-usernames) |
-| `juicypotato.exe` | [Windows potato priv-esc](https://github.com/ohpe/juicy-potato) |
+| `juicypotato.exe` | [Windows potato priv-esc (legacy)](https://github.com/ohpe/juicy-potato) |
+| `juicypotatong.exe` | [JuicyPotato successor for Win10 1809+](https://github.com/antonioCoco/JuicyPotatoNG) |
 | `kerbrute_linux_amd64` | [Kerberos user enum (Linux)](https://github.com/ropnop/kerbrute) |
 | `kerbrute_windows_amd64.exe` | [Kerberos user enum (Windows)](https://github.com/ropnop/kerbrute) |
 | `lapstoolkit.ps1` | [LAPS enumeration toolkit](https://github.com/leoloobeek/LAPSToolkit) |
@@ -227,6 +262,8 @@ The workflow runs twice a week (Monday and Thursday at 06:00 UTC) and on manual 
 | `sebackupprivilegecmdlets.dll` | [SeBackupPrivilege PowerShell cmdlets](https://github.com/giuliano108/SeBackupPrivilege) |
 | `sebackupprivilegeutils.dll` | [SeBackupPrivilege native helper](https://github.com/giuliano108/SeBackupPrivilege) |
 | `sharpup.exe` | [GhostPack priv-esc checks](https://github.com/r3motecontrol/Ghostpack-CompiledBinaries) |
+| `sigmapotato.exe` | [GodPotato fork (.NET 4.8)](https://github.com/tylerdotrar/SigmaPotato) |
+| `sigmapotatocore.exe` | [SigmaPotato for .NET 3.5 / PS Core reflection](https://github.com/tylerdotrar/SigmaPotato) |
 | `smtp-user-enum.py` | [SMTP user enumeration](https://github.com/cytopia/smtp-user-enum) |
 | `snaffler.exe` | [AD share content finder](https://github.com/SnaffCon/Snaffler) |
 | `socat` | [Static socat Linux binary](https://github.com/andrew-d/static-binaries) |

@@ -379,6 +379,46 @@
       }
     },
     {
+      "name": "juicy-potato-ng",
+      "type": "release",
+      "repo": "antonioCoco/JuicyPotatoNG",
+      "assets": [
+        "^JuicyPotatoNG\\.zip$"
+      ],
+      "rename": {
+        "^JuicyPotatoNG\\.zip$": "$lower"
+      },
+      "extract": true,
+      "extract_keep": [
+        "^JuicyPotatoNG\\.exe$"
+      ]
+    },
+    {
+      "name": "sigmapotato",
+      "type": "release",
+      "repo": "tylerdotrar/SigmaPotato",
+      "assets": [
+        "^SigmaPotato\\.exe$",
+        "^SigmaPotatoCore\\.exe$"
+      ],
+      "rename": {
+        "^SigmaPotato\\.exe$": "$lower",
+        "^SigmaPotatoCore\\.exe$": "$lower"
+      }
+    },
+    {
+      "name": "sigmapotato-ps1",
+      "type": "file",
+      "repo": "tylerdotrar/SigmaPotato",
+      "ref": "main",
+      "paths": [
+        "Invoke-SigmaPotato.ps1"
+      ],
+      "rename": {
+        "^Invoke-SigmaPotato\\.ps1$": "$lower"
+      }
+    },
+    {
       "name": "sweetpotato",
       "type": "file",
       "repo": "uknowsec/SweetPotato",
