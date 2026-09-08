@@ -290,16 +290,28 @@
     },
     {
       "name": "roothound",
-      "type": "file",
+      "type": "repo",
       "repo": "Noz2/RootHound",
+      "ref": "main"
+    },
+    {
+      "name": "wesng",
+      "type": "repo",
+      "repo": "bitsadmin/wesng",
+      "ref": "master"
+    },
+    {
+      "name": "sebackupprivilege",
+      "type": "file",
+      "repo": "giuliano108/SeBackupPrivilege",
       "ref": "master",
       "paths": [
-        "RootHound.py",
-        "HoundCollector.sh"
+        "SeBackupPrivilegeCmdLets/bin/Debug/SeBackupPrivilegeCmdLets.dll",
+        "SeBackupPrivilegeCmdLets/bin/Debug/SeBackupPrivilegeUtils.dll"
       ],
       "rename": {
-        "^RootHound\\.py$": "$lower",
-        "^HoundCollector\\.sh$": "roothound-collector.sh"
+        "^SeBackupPrivilegeCmdLets\\.dll$": "$lower",
+        "^SeBackupPrivilegeUtils\\.dll$": "$lower"
       }
     },
     {

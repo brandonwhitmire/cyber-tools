@@ -31,9 +31,19 @@ find "${TOOLS_DIR}" -maxdepth 1 -type f \( \
   -name 'nc-x64' -o -name 'nc-x86' -o \
   -name 'socat' -o -name 'nmap' -o \
   -name 'smtp-user-enum.py' -o \
-  -name 'roothound-collector.sh' -o -name 'pretender' -o -name 'bloodhound-cli' -o \
+  -name 'pretender' -o -name 'bloodhound-cli' -o \
   -name 'ligolo-agent' -o -name 'ligolo-proxy' \
 \) -exec chmod +x {} + 2>/dev/null || true
+
+# Leftovers from when roothound was type:file (two scripts only).
+rm -f "${TOOLS_DIR}/roothound.py" "${TOOLS_DIR}/roothound-collector.sh"
+
+if [[ -d "${TOOLS_DIR}/roothound" ]]; then
+  find "${TOOLS_DIR}/roothound" -type f \( -name '*.sh' -o -name '*.py' \) -exec chmod +x {} + 2>/dev/null || true
+fi
+if [[ -f "${TOOLS_DIR}/wesng/wes.py" ]]; then
+  chmod +x "${TOOLS_DIR}/wesng/wes.py" 2>/dev/null || true
+fi
 
 chmod +x "${ROOT}/sync_tools.sh" "${ROOT}/deliver_tools.sh" "${ROOT}/sync_extras.sh" "${ROOT}/tools.sh" 2>/dev/null || true
 

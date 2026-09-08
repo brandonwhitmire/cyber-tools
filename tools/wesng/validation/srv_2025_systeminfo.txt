@@ -1,0 +1,78 @@
+
+Host Name:                     MYSERVER
+OS Name:                       Microsoft Windows Server 2025 Datacenter
+OS Version:                    10.0.26100 N/A Build 26100
+OS Manufacturer:               Microsoft Corporation
+OS Configuration:              Standalone Server
+OS Build Type:                 Multiprocessor Free
+Registered Owner:              N/A
+Registered Organization:       N/A
+Product ID:                    00490-91840-47088-AAOEM
+Original Install Date:         2025-08-23, 15:25:54
+System Boot Time:              2026-08-23, 03:26:06
+System Manufacturer:           ASRock
+System Model:                  B860 Pro RS
+System Type:                   x64-based PC
+Processor(s):                  1 Processor(s) Installed.
+                               [01]: Intel64 Family 6 Model 198 Stepping 2 GenuineIntel ~1500 Mhz
+BIOS Version:                  American Megatrends International, LLC. 1.09, 2024-11-22
+Windows Directory:             C:\WINDOWS
+System Directory:              C:\WINDOWS\system32
+Boot Device:                   \Device\HarddiskVolume1
+System Locale:                 en-us;English (United States)
+Input Locale:                  en-us;English (United States)
+Time Zone:                     (UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna
+Total Physical Memory:         97,718 MB
+Available Physical Memory:     16,471 MB
+Virtual Memory: Max Size:      112,054 MB
+Virtual Memory: Available:     28,362 MB
+Virtual Memory: In Use:        83,692 MB
+Page File Location(s):         C:\pagefile.sys
+Domain:                        WORKGROUP
+Logon Server:                  \\MYSERVER
+Hotfix(s):                     3 Hotfix(s) Installed.
+                               [01]: KB5120708
+                               [02]: KB5120233
+                               [03]: KB5120232
+Network Card(s):               4 NIC(s) Installed.
+                               [01]: Realtek Gaming 2.5GbE Family Controller
+                                     Connection Name: Ethernet
+                                     DHCP Enabled:    No
+                                     IP address(es)
+                               [02]: Microsoft KM-TEST Loopback Adapter
+                                     Connection Name: Npcap Loopback Adapter
+                                     DHCP Enabled:    Yes
+                                     DHCP Server:     255.255.255.255
+                                     IP address(es)
+                                     [01]: 169.254.115.144
+                                     [02]: fe80::576a:df48:74a0:86ac
+                               [03]: Hyper-V Virtual Ethernet Adapter
+                                     Connection Name: vEthernet (Default Switch)
+                                     DHCP Enabled:    No
+                                     IP address(es)
+                                     [01]: 192.168.254.1
+                                     [02]: fe80::f7d6:376c:985b:c0c5
+                               [04]: Hyper-V Virtual Ethernet Adapter
+                                     Connection Name: vEthernet (BitsadminLab)
+                                     DHCP Enabled:    Yes
+                                     DHCP Server:     255.255.255.255
+                                     IP address(es)
+                                     [01]: 169.254.75.215
+                                     [02]: fe80::7647:dc15:7501:8a3d
+Virtualization-based security: Status: Running
+                               Required Security Properties:
+                               Available Security Properties:
+                                     Base Virtualization Support
+                                     Secure Boot
+                                     DMA Protection
+                                     Secure Memory Overwrite
+                                     UEFI Code Readonly
+                                     SMM Security Mitigations 1.0
+                                     Mode Based Execution Control
+                                     APIC Virtualization
+                               Services Configured:
+                               Services Running:
+                               App Control for Business policy: Enforced
+                               App Control for Business user mode policy: Off
+                               Security Features Enabled:
+Hyper-V Requirements:          A hypervisor has been detected. Features required for Hyper-V will not be displayed.

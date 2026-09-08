@@ -34,7 +34,7 @@ GITHUB_TOKEN=<PAT> ./sync_extras.sh
 
 ## Staging server
 
-Prints the connect IP (not `0.0.0.0`), a compact file table, and pasteable wget / SMB commands. Replace `FILE` with a name from the table.
+Prints the connect IP (not `0.0.0.0`), a compact file table, and pasteable wget / SMB commands. Replace `<FILE>` with a name from the table. Live output is connections and file transfers only; the full HTTP/SMB log is written to `/tmp/deliver-tools.debug` (override with `DEBUG_LOG`).
 
 ```bash
 CONNECT_IP=10.10.14.5 SERVE_DIR=./tools SERVER_IP=0.0.0.0 HTTP_PORT=8080 SMB_PORT=445 SMB_SHARE=tools SMB_USER=guest SMB_PASS=guest ./deliver_tools.sh
@@ -220,11 +220,12 @@ The workflow runs twice a week (Monday and Thursday at 06:00 UTC) and on manual 
 | `pssqlite.psd1` | [SQLite PowerShell module](https://github.com/RamblingCookieMonster/PSSQLite) |
 | `rogueoxidresolver.exe` | [RoguePotato Oxid resolver](https://github.com/antonioCoco/RoguePotato) |
 | `roguepotato.exe` | [RoguePotato priv-esc](https://github.com/antonioCoco/RoguePotato) |
-| `roothound-collector.sh` | [RootHound collector helper](https://github.com/Noz2/RootHound) |
-| `roothound.py` | [RootHound AD collector](https://github.com/Noz2/RootHound) |
+| `roothound/` | [RootHound Linux privesc mapper (full repo)](https://github.com/Noz2/RootHound) |
 | `runascs.exe` | [RunasCs privilege tool](https://github.com/antonioCoco/RunasCs) |
 | `runascs_net2.exe` | [RunasCs for .NET 2](https://github.com/antonioCoco/RunasCs) |
 | `seatbelt.exe` | [GhostPack host survey](https://github.com/r3motecontrol/Ghostpack-CompiledBinaries) |
+| `sebackupprivilegecmdlets.dll` | [SeBackupPrivilege PowerShell cmdlets](https://github.com/giuliano108/SeBackupPrivilege) |
+| `sebackupprivilegeutils.dll` | [SeBackupPrivilege native helper](https://github.com/giuliano108/SeBackupPrivilege) |
 | `sharpup.exe` | [GhostPack priv-esc checks](https://github.com/r3motecontrol/Ghostpack-CompiledBinaries) |
 | `smtp-user-enum.py` | [SMTP user enumeration](https://github.com/cytopia/smtp-user-enum) |
 | `snaffler.exe` | [AD share content finder](https://github.com/SnaffCon/Snaffler) |
@@ -232,5 +233,6 @@ The workflow runs twice a week (Monday and Thursday at 06:00 UTC) and on manual 
 | `socatx64.exe` | [Static socat Windows x64](https://github.com/3ndG4me/socat) |
 | `socatx86.exe` | [Static socat Windows x86](https://github.com/3ndG4me/socat) |
 | `sweetpotato.exe` | [SweetPotato priv-esc](https://github.com/uknowsec/SweetPotato) |
+| `wesng/` | [Windows Exploit Suggester NG](https://github.com/bitsadmin/wesng) |
 | `winpeasx64.exe` | [Windows priv-esc enumerator](https://github.com/peass-ng/PEASS-ng) |
 | `winpeasx86.exe` | [Windows priv-esc enumerator](https://github.com/peass-ng/PEASS-ng) |

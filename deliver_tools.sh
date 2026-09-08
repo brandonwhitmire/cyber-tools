@@ -9,6 +9,7 @@ SMB_PORT="${SMB_PORT:-445}"
 SMB_SHARE="${SMB_SHARE:-tools}"
 SMB_USER="${SMB_USER:-guest}"
 SMB_PASS="${SMB_PASS:-guest}"
+DEBUG_LOG="${DEBUG_LOG:-/tmp/deliver-tools.debug}"
 
 log() { echo "[deliver_tools] $*" >&2; }
 die() { echo "[deliver_tools] ERROR: $*" >&2; exit 1; }
@@ -142,8 +143,8 @@ fit_cell() {
   printf '%s' "${s:0:$((w - 3))}..."
 }
 
-# Column-major ASCII table. Prefer full names; add columns (and truncate)
-# only to try to fit TERM_LINES. Never shrink cells below min_inner.
+# Column-major ASCII table. Prefer full names; add columns and shrink
+# cells only as needed to keep the table on one screen.
 print_file_table() {
   local reserved=$1
   shift
@@ -162,48 +163,43 @@ print_file_table() {
     fi
   done
 
-  local min_inner=20
-  if ((min_inner > maxw)); then
-    min_inner=$maxw
-  fi
-
-  local max_cols=$(((TERM_COLS - 1) / (min_inner + 3)))
-  if ((max_cols < 1)); then
-    max_cols=1
-  fi
-  local full_cols=$(((TERM_COLS - 1) / (maxw + 3)))
-  if ((full_cols < 1)); then
-    full_cols=1
-  fi
-
   local budget=$((TERM_LINES - reserved - 2))
   if ((budget < 1)); then
     budget=1
   fi
 
-  local n_cols=$full_cols
-  local inner=$maxw
-  local data_rows=$(((n + n_cols - 1) / n_cols))
-  local c try_inner try_rows
+  local n_cols=1 inner=$maxw data_rows=$n
+  local min_try c try_inner try_rows max_cols fitted=0
 
-  if ((data_rows > budget)); then
-    for ((c = full_cols + 1; c <= max_cols; c++)); do
+  for min_try in 20 16 12; do
+    if ((min_try > maxw)); then
+      min_try=$maxw
+    fi
+    max_cols=$(((TERM_COLS - 1) / (min_try + 3)))
+    if ((max_cols < 1)); then
+      max_cols=1
+    fi
+    for ((c = 1; c <= max_cols; c++)); do
       try_inner=$(((TERM_COLS - 1) / c - 3))
       if ((try_inner > maxw)); then
         try_inner=$maxw
       fi
-      if ((try_inner < min_inner)); then
-        try_inner=$min_inner
+      if ((try_inner < min_try)); then
+        continue
       fi
       try_rows=$(((n + c - 1) / c))
       n_cols=$c
       inner=$try_inner
       data_rows=$try_rows
       if ((data_rows <= budget)); then
+        fitted=1
         break
       fi
     done
-  fi
+    if ((fitted)); then
+      break
+    fi
+  done
 
   local rule="" c
   rule="+"
@@ -288,12 +284,11 @@ print_pastables() {
   local win_unc="\\\\${connect_ip}\\${SMB_SHARE}"
   local smb_unc="//${connect_ip}/${SMB_SHARE}"
 
-  echo "wget ${http_url}/FILE -O FILE"
-  echo "wget ${http_url}/FILE -outfile FILE"
+  echo "wget ${http_url}/<FILE>"
   echo "net use ${win_unc} /user:${SMB_USER} ${SMB_PASS}"
-  echo "copy ${win_unc}\\FILE ."
-  echo "smbclient ${smb_unc} -p ${SMB_PORT} -U ${SMB_USER}%${SMB_PASS} -c 'get FILE'"
-  echo "replace FILE with a name from the table  |  Ctrl+C to stop"
+  echo "copy ${win_unc}\\<FILE> ."
+  echo "smbclient ${smb_unc} -p ${SMB_PORT} -U ${SMB_USER}%${SMB_PASS} -c 'get <FILE>'"
+  echo "replace <FILE> with a name from the table  |  Ctrl+C to stop"
 }
 
 # Banner + pastables + blanks. Table is last and may scroll.
@@ -309,15 +304,17 @@ reserved_lines() {
 
 HTTP_PID=""
 SMB_PID=""
-TAIL_PID=""
+FOLLOW_PIDS=()
 HTTP_LOG=""
 SMB_LOG=""
 SMB_STARTED=0
 
 cleanup() {
   local pid
-  for pid in "${TAIL_PID:-}" "${HTTP_PID:-}" "${SMB_PID:-}"; do
-    [[ -n "$pid" ]] && kill "$pid" 2>/dev/null || true
+  for pid in ${FOLLOW_PIDS[@]+"${FOLLOW_PIDS[@]}"} "${HTTP_PID:-}" "${SMB_PID:-}"; do
+    [[ -n "${pid:-}" ]] || continue
+    kill "$pid" 2>/dev/null || true
+    pkill -P "$pid" 2>/dev/null || true
   done
   [[ -n "${HTTP_LOG:-}" ]] && rm -f "$HTTP_LOG"
   [[ -n "${SMB_LOG:-}" ]] && rm -f "$SMB_LOG"
@@ -369,13 +366,81 @@ start_smb() {
   SMB_STARTED=1
 }
 
+# HTTP: GET/POST of a real path (skip directory indexes).
+emit_http() {
+  local line=$1 ip method path
+  [[ "$line" == *'"GET '* || "$line" == *'"POST '* || "$line" == *'"PUT '* ]] || return 0
+  if [[ "$line" =~ ^([0-9a-fA-F:.]+)\ .+\ \"(GET|POST|PUT)\ /([^[:space:]]*)\ HTTP/[0-9.]+\"\ ([0-9]+) ]]; then
+    ip="${BASH_REMATCH[1]}"
+    method="${BASH_REMATCH[2]}"
+    path="${BASH_REMATCH[3]}"
+    [[ -z "$path" || "$path" == */ ]] && return 0
+    printf '[http] %s %s /%s %s\n' "$ip" "$method" "$path" "${BASH_REMATCH[4]}"
+  fi
+}
+
+# SMB: connect/auth + actual reads/writes. Directory listings (QueryDirectory,
+# QueryInfo, Create/Close of ".") stay in DEBUG_LOG only.
+emit_smb() {
+  local line=$1 file
+  case "$line" in
+    *"Incoming connection"*)
+      if [[ "$line" =~ Incoming\ connection\ \(([^,]+), ]]; then
+        printf '[smb] %s connected\n' "${BASH_REMATCH[1]}"
+      else
+        printf '[smb] connected\n'
+      fi
+      ;;
+    *"User "*" authenticated successfully"*)
+      line="${line#*User }"
+      line="${line%% authenticated*}"
+      printf '[smb] auth %s\n' "$line"
+      ;;
+    *"smb2Read:"*|*"smbComRead:"*|*"smbComReadAndX:"*)
+      file="${line#*: }"
+      file="${file%%$'\r'}"
+      [[ -z "$file" || "$file" == "." || "$file" == "*" || "$file" == "/" ]] && return 0
+      [[ "$file" == "${LAST_SMB_GET:-}" ]] && return 0
+      LAST_SMB_GET="$file"
+      printf '[smb] GET %s\n' "$file"
+      ;;
+    *"smb2Write:"*|*"smbComWrite:"*|*"smbComWriteAndX:"*)
+      file="${line#*: }"
+      file="${file%%$'\r'}"
+      [[ -z "$file" || "$file" == "." ]] && return 0
+      printf '[smb] PUT %s\n' "$file"
+      ;;
+  esac
+}
+
+follow_one() {
+  local kind=$1 file=$2
+  [[ -n "$file" && -f "$file" ]] || return 0
+  tail -n 0 -f "$file" | {
+    LAST_SMB_GET=""
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      printf '%s\n' "$line" >>"$DEBUG_LOG"
+      if [[ "$kind" == http ]]; then
+        emit_http "$line"
+      else
+        emit_smb "$line"
+      fi
+    done
+  }
+}
+
 follow_logs() {
-  local files=()
-  [[ -n "$HTTP_LOG" && -f "$HTTP_LOG" ]] && files+=("$HTTP_LOG")
-  [[ -n "$SMB_LOG" && -f "$SMB_LOG" && "$SMB_STARTED" == "1" ]] && files+=("$SMB_LOG")
-  ((${#files[@]} > 0)) || return 0
-  tail -n 0 -f "${files[@]}" &
-  TAIL_PID=$!
+  : >"$DEBUG_LOG"
+  echo "debug  ${DEBUG_LOG}"
+
+  if [[ -n "$HTTP_LOG" && -f "$HTTP_LOG" ]]; then
+    follow_one http "$HTTP_LOG" &
+    FOLLOW_PIDS+=("$!")
+  fi
+  if [[ -n "$SMB_LOG" && -f "$SMB_LOG" && "$SMB_STARTED" == "1" ]]; then
+    follow_one smb "$SMB_LOG" &
+    FOLLOW_PIDS+=("$!")
+  fi
 }
 
 print_ui() {
