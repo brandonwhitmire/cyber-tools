@@ -11,8 +11,10 @@ Offline repository for curated cybersecurity tools:
 ```
 cyber-tools/
 ├── sync.json                  # declare each tool + how to grab it
+├── linpeas_oscp.json          # which linPEAS modules to bake into linpeas_oscp.sh
+├── build_linpeas.sh           # rebuild linpeas_oscp.sh only when builder inputs change
 ├── sync_tools.sh              # the sync engine
-├── sync_extras.sh             # sync + extras (AccessChk, extract Python)
+├── sync_extras.sh             # sync + extras (AccessChk, extract Python, linpeas)
 ├── deliver_tools.sh           # one-command HTTP + SMB staging server
 ├── tools.sh                   # `tools` launcher (find repo + deliver)
 ├── .github/workflows/         # twice-weekly cron + manual trigger
@@ -22,7 +24,7 @@ cyber-tools/
 ## Quick start
 
 ```bash
-chmod +x sync_tools.sh sync_extras.sh deliver_tools.sh tools.sh
+chmod +x sync_tools.sh sync_extras.sh deliver_tools.sh tools.sh build_linpeas.sh
 ./sync_extras.sh
 ```
 
@@ -155,6 +157,35 @@ Some tools are not in `sync.json` because they have no suitable GitHub source:
 
 - **AccessChk** — downloaded from Sysinternals (`live.sysinternals.com`) as `tools/accesschk.exe` and `tools/accesschk64.exe`.
 - **Portable Python** — the `static-python` release tarball is extracted into `tools/python/` after sync.
+- **linpeas_oscp.sh** — rebuilt from PEASS-ng's builder when `linpeas_oscp.json` or upstream builder inputs change (`./build_linpeas.sh`). Stock `linpeas.sh` still comes from the PEASS-ng release.
+
+## Custom linpeas (offline)
+
+`tools/linpeas_oscp.sh` is a custom build from [linPEAS/builder](https://github.com/peass-ng/PEASS-ng/tree/master/linPEAS/builder) with network-heavy modules stripped so it does not hang on isolated boxes. Stock `tools/linpeas.sh` remains the upstream release.
+
+Edit **`linpeas_oscp.json`** to change what gets baked in (`exclude`, or switch to an `include` allowlist). Then:
+
+```bash
+./build_linpeas.sh          # no-op if builder + config are unchanged
+./build_linpeas.sh --force  # rebuild anyway
+```
+
+Default excludes:
+
+| Module | Why |
+|--------|-----|
+| `cloud` | Cloud metadata (`169.254.169.254`) timeouts |
+| `container` | Docker/LXC checks |
+| `api_keys_regex` | Slow filesystem-wide regex scan |
+| `network_information` | External DNS / network probes |
+
+Kept: `system_information`, `procs_crons_timers_srvcs_sockets`, `users_information`, `software_information`, `interesting_perms_files`, `interesting_files`.
+
+On the box, skip online vuln checks (`-a` / `-V`) and extra regexes:
+
+```bash
+REGEXES="0" ./linpeas_oscp.sh -q -e 2>&1 | tee linpeas_output.txt
+```
 
 ## Local testing
 
@@ -167,7 +198,7 @@ GITHUB_TOKEN=<PAT> ./sync_tools.sh
 
 ## GitHub Action setup
 
-The workflow runs twice a week (Monday and Thursday at 06:00 UTC) and on manual trigger (`workflow_dispatch`). It installs **Go** and **UPX** (needed for `type: build` tools like ligolo-ng), runs `sync_tools.sh`, stages all changes, and commits/pushes only when `git diff --cached` is non-empty.
+The workflow runs twice a week (Monday and Thursday at 06:00 UTC) and on manual trigger (`workflow_dispatch`). It installs **Go**, **UPX** (for `type: build` tools like ligolo-ng), and **PyYAML** (for the linpeas builder), runs `sync_tools.sh` then `build_linpeas.sh`, stages all changes, and commits/pushes only when `git diff --cached` is non-empty.
 
 **Required repo setting:** Settings → Actions → General → Workflow permissions → **Read and write permissions**.
 
@@ -234,7 +265,8 @@ Flags and examples are in each upstream README (linked from the inventory).
 | `ligolo-agent.exe` | [Ligolo-ng agent (Windows)](https://github.com/nicocha30/ligolo-ng) |
 | `ligolo-proxy` | [Ligolo-ng proxy (Linux)](https://github.com/nicocha30/ligolo-ng) |
 | `ligolo-proxy.exe` | [Ligolo-ng proxy (Windows)](https://github.com/nicocha30/ligolo-ng) |
-| `linpeas.sh` | [Linux priv-esc enumerator](https://github.com/peass-ng/PEASS-ng) |
+| `linpeas.sh` | [linPEAS (upstream release)](https://github.com/peass-ng/PEASS-ng) |
+| `linpeas_oscp.sh` | [linPEAS, custom offline OSCP build](https://github.com/peass-ng/PEASS-ng) |
 | `lse.sh` | [Linux smart enumeration](https://github.com/diego-treitos/linux-smart-enumeration) |
 | `nc-x64` | [Static netcat Linux x64](https://github.com/mermehr/static-binaries) |
 | `nc-x64.exe` | [Static netcat Windows x64](https://github.com/mermehr/static-binaries) |
