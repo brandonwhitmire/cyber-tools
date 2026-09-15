@@ -73,6 +73,17 @@
       }
     },
     {
+      "name": "group3r",
+      "type": "release",
+      "repo": "Group3r/Group3r",
+      "assets": [
+        "^Group3r\\.exe$"
+      ],
+      "rename": {
+        "^Group3r\\.exe$": "$lower"
+      }
+    },
+    {
       "name": "hackbrowserdata",
       "type": "release",
       "repo": "moonD4rk/HackBrowserData",
@@ -293,6 +304,18 @@
       "type": "repo",
       "repo": "Noz2/RootHound",
       "ref": "main"
+    },
+    {
+      "name": "privhound",
+      "type": "file",
+      "repo": "dazzyddos/PrivHound",
+      "ref": "main",
+      "paths": [
+        "PrivHound.ps1"
+      ],
+      "rename": {
+        "^PrivHound\\.ps1$": "$lower"
+      }
     },
     {
       "name": "wesng",

@@ -248,6 +248,7 @@ Flags and examples are in each upstream README (linked from the inventory).
 | `godpotato-net2.exe` | [Potato priv-esc for .NET 2](https://github.com/BeichenDream/GodPotato) |
 | `godpotato-net35.exe` | [Potato priv-esc for .NET 3.5](https://github.com/BeichenDream/GodPotato) |
 | `godpotato-net4.exe` | [Potato priv-esc for .NET 4](https://github.com/BeichenDream/GodPotato) |
+| `group3r.exe` | [GPO parser](https://github.com/Group3r/Group3r) |
 | `hack-browser-data.exe` | [Browser credential extractor](https://github.com/moonD4rk/HackBrowserData) |
 | `inveigh.exe` | [Windows mitm/spoofing toolkit](https://github.com/Kevin-Robertson/Inveigh) |
 | `invoke-sigmapotato.ps1` | [SigmaPotato in-memory helper](https://github.com/tylerdotrar/SigmaPotato) |
@@ -280,6 +281,7 @@ Flags and examples are in each upstream README (linked from the inventory).
 | `pretender` | [LLMNR/NBT-NS/mDNS spoofing](https://github.com/RedTeamPentesting/pretender) |
 | `pretender.exe` | [LLMNR/NBT-NS/mDNS spoofing](https://github.com/RedTeamPentesting/pretender) |
 | `printerbug.py` | [MS-RPRN coercion helper](https://github.com/dirkjanm/krbrelayx) |
+| `privhound.ps1` | [BloodHound OpenGraph local-privesc collector](https://github.com/dazzyddos/PrivHound) |
 | `printspoofer32.exe` | [PrintSpooler priv-esc (x86)](https://github.com/itm4n/PrintSpoofer) |
 | `printspoofer64.exe` | [PrintSpooler priv-esc (x64)](https://github.com/itm4n/PrintSpoofer) |
 | `pspy32` | [Linux process monitor (x86)](https://github.com/DominicBreuker/pspy) |
