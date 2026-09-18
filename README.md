@@ -39,10 +39,17 @@ GITHUB_TOKEN=<PAT> ./sync_extras.sh
 Prints the connect IP (not `0.0.0.0`), a compact file table, and pasteable wget / SMB commands. Replace `<FILE>` with a name from the table. Live output is connections and file transfers only; the full HTTP/SMB log is written to `/tmp/deliver-tools.debug` (override with `DEBUG_LOG`).
 
 ```bash
-CONNECT_IP=10.10.14.5 SERVE_DIR=./tools SERVER_IP=0.0.0.0 HTTP_PORT=8080 SMB_PORT=445 SMB_SHARE=tools SMB_USER=guest SMB_PASS=guest ./deliver_tools.sh
+CONNECT_IP=10.10.14.5 SERVE_DIR=./tools SERVER_IP=0.0.0.0 HTTP_PORT=8888 SMB_PORT=445 SMB_SHARE=tools SMB_USER=guest SMB_PASS=guest ./deliver_tools.sh
 ```
 
-`CONNECT_IP` is optional — when unset, the script uses `SERVER_IP` if it is a real address, otherwise the default-route IPv4. Other local IPv4s are listed so you can pin `tun0` vs `eth0`.
+HTTP port defaults to **8888**. Override with `-p` / `--port` / `--http-port`, or `HTTP_PORT`:
+
+```bash
+./deliver_tools.sh -p 9000
+tools --port 9000
+```
+
+`CONNECT_IP` is optional — when unset, the script uses `SERVER_IP` if it is a real address, otherwise the default-route IPv4. Other local IPv4s are listed so you can pin `tun0` vs `eth0`. The bind line also prints `$PWD`.
 
 ### `tools` command
 
@@ -295,6 +302,8 @@ Flags and examples are in each upstream README (linked from the inventory).
 | `seatbelt.exe` | [GhostPack host survey](https://github.com/r3motecontrol/Ghostpack-CompiledBinaries) |
 | `sebackupprivilegecmdlets.dll` | [SeBackupPrivilege PowerShell cmdlets](https://github.com/giuliano108/SeBackupPrivilege) |
 | `sebackupprivilegeutils.dll` | [SeBackupPrivilege native helper](https://github.com/giuliano108/SeBackupPrivilege) |
+| `sharphound.exe` | [BloodHound AD collector](https://github.com/SpecterOps/SharpHound) |
+| `sharphound.ps1` | [BloodHound AD collector (PowerShell)](https://github.com/SpecterOps/SharpHound) |
 | `sharpup.exe` | [GhostPack priv-esc checks](https://github.com/r3motecontrol/Ghostpack-CompiledBinaries) |
 | `sigmapotato.exe` | [GodPotato fork (.NET 4.8)](https://github.com/tylerdotrar/SigmaPotato) |
 | `sigmapotatocore.exe` | [SigmaPotato for .NET 3.5 / PS Core reflection](https://github.com/tylerdotrar/SigmaPotato) |

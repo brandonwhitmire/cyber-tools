@@ -133,10 +133,11 @@ case "${1:-}" in
     _cyber_tools_install
     ;;
   --help|-h)
-    echo "Usage: tools.sh [--install] [deliver_tools.sh args...]"
-    echo "  tools.sh           find cyber-tools and run deliver_tools.sh"
-    echo "  tools.sh --install append a source line to ~/.zshrc or ~/.bashrc"
-    echo "  source tools.sh    define a \`tools\` function in the current shell"
+    echo "Usage: tools.sh [--install] [deliver_tools.sh options...]"
+    echo "  tools.sh              find cyber-tools and run deliver_tools.sh"
+    echo "  tools.sh --install    append a source line to ~/.zshrc or ~/.bashrc"
+    echo "  tools.sh -p 9000      HTTP port (also --port / --http-port; default 8888)"
+    echo "  source tools.sh       define a \`tools\` function in the current shell"
     ;;
   *)
     REPO="$(cyber_tools_find)"

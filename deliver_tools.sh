@@ -4,15 +4,63 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVE_DIR="${SERVE_DIR:-${ROOT}/tools}"
 SERVER_IP="${SERVER_IP:-0.0.0.0}"
-HTTP_PORT="${HTTP_PORT:-8080}"
+HTTP_PORT="${HTTP_PORT:-8888}"
 SMB_PORT="${SMB_PORT:-445}"
 SMB_SHARE="${SMB_SHARE:-tools}"
 SMB_USER="${SMB_USER:-guest}"
 SMB_PASS="${SMB_PASS:-guest}"
 DEBUG_LOG="${DEBUG_LOG:-/tmp/deliver-tools.debug}"
+SAVED_STTY=""
 
 log() { echo "[deliver_tools] $*" >&2; }
 die() { echo "[deliver_tools] ERROR: $*" >&2; exit 1; }
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [options]
+
+  -p, --port, --http-port PORT  HTTP listen port (default: ${HTTP_PORT})
+  -h, --help                    Show this help
+
+Environment (CLI overrides env):
+  HTTP_PORT SMB_PORT SERVER_IP CONNECT_IP SERVE_DIR
+  SMB_SHARE SMB_USER SMB_PASS DEBUG_LOG
+EOF
+}
+
+is_port() {
+  [[ "$1" =~ ^[0-9]+$ ]] && ((10#$1 >= 1 && 10#$1 <= 65535))
+}
+
+parse_args() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      -p|--port|--http-port)
+        [[ -n "${2:-}" ]] || die "$1 requires a port"
+        HTTP_PORT="$2"
+        shift 2
+        ;;
+      --port=*|--http-port=*)
+        HTTP_PORT="${1#*=}"
+        shift
+        ;;
+      -p[0-9]*)
+        HTTP_PORT="${1#-p}"
+        shift
+        ;;
+      *)
+        die "unknown option: $1 (try --help)"
+        ;;
+    esac
+  done
+  is_port "$HTTP_PORT" || die "invalid HTTP port: ${HTTP_PORT}"
+}
+
+parse_args "$@"
 
 [[ -d "$SERVE_DIR" ]] || die "serve directory not found: $SERVE_DIR"
 
@@ -256,8 +304,8 @@ print_connect_banner() {
   local width=$TERM_COLS
   local rule
 
-  if ((width > 100)); then
-    width=100
+  if ((width > 120)); then
+    width=120
   fi
   rule="+$(printf '%*s' $((width - 2)) '' | tr ' ' '-')+"
 
@@ -268,7 +316,7 @@ print_connect_banner() {
   else
     box_line "$width" "SMB   (not running — HTTP only)"
   fi
-  box_line "$width" "bind  ${SERVER_IP}:${HTTP_PORT}  smb:${SMB_PORT}  files:${#SERVE_ENTRIES[@]}"
+  box_line "$width" "bind  ${SERVER_IP}:${HTTP_PORT}  smb:${SMB_PORT}  files:${#SERVE_ENTRIES[@]}  ${PWD}"
   extra="$(other_ips_line "$connect_ip")"
   if [[ -n "$extra" ]]; then
     box_line "$width" "also  ${extra}CONNECT_IP=... to pin"
@@ -309,8 +357,36 @@ HTTP_LOG=""
 SMB_LOG=""
 SMB_STARTED=0
 
+restore_tty() {
+  if [[ -n "${SAVED_STTY:-}" ]]; then
+    stty "$SAVED_STTY" </dev/tty 2>/dev/null || true
+    SAVED_STTY=""
+  fi
+}
+
+# Stop the terminal injecting wheel-scroll as CSI, and don't echo leftover input.
+quiet_tty() {
+  [[ -t 0 && -e /dev/tty ]] || return 0
+  SAVED_STTY="$(stty -g </dev/tty 2>/dev/null)" || { SAVED_STTY=""; return 0; }
+  printf '\e[?9l\e[?1000l\e[?1002l\e[?1003l\e[?1005l\e[?1006l\e[?1007l\e[?1015l' >/dev/tty 2>/dev/null || true
+  stty -echo -echoctl </dev/tty 2>/dev/null || stty -echo </dev/tty 2>/dev/null || true
+}
+
+# Keep HTTP in the foreground process group; discard mouse/key CSI so it
+# never echoes. Ctrl+C still delivers SIGINT (ISIG stays on).
+wait_http() {
+  if [[ -t 0 ]]; then
+    while kill -0 "$HTTP_PID" 2>/dev/null; do
+      IFS= read -r -s -n 1 -t 1 _junk || true
+    done
+  else
+    wait "$HTTP_PID"
+  fi
+}
+
 cleanup() {
   local pid
+  restore_tty
   for pid in ${FOLLOW_PIDS[@]+"${FOLLOW_PIDS[@]}"} "${HTTP_PID:-}" "${SMB_PID:-}"; do
     [[ -n "${pid:-}" ]] || continue
     kill "$pid" 2>/dev/null || true
@@ -325,7 +401,7 @@ start_http() {
   command -v python3 >/dev/null 2>&1 || die "python3 required for HTTP server"
   HTTP_LOG="$(mktemp -t deliver-http.XXXXXX)"
   (cd "$SERVE_DIR" && PYTHONUNBUFFERED=1 python3 -m http.server "$HTTP_PORT" --bind "$SERVER_IP") \
-    >"$HTTP_LOG" 2>&1 &
+    </dev/null >"$HTTP_LOG" 2>&1 &
   HTTP_PID=$!
   sleep 0.2
   if ! kill -0 "$HTTP_PID" 2>/dev/null; then
@@ -353,7 +429,7 @@ start_smb() {
     return 0
   fi
 
-  "${smb_cmd[@]}" >"$SMB_LOG" 2>&1 &
+  "${smb_cmd[@]}" </dev/null >"$SMB_LOG" 2>&1 &
   SMB_PID=$!
   sleep 0.3
   if ! kill -0 "$SMB_PID" 2>/dev/null; then
@@ -469,7 +545,8 @@ fi
 
 start_http
 start_smb
+quiet_tty
 print_ui "$CONNECT_IP" "$SMB_STARTED"
 echo
 follow_logs
-wait "$HTTP_PID"
+wait_http

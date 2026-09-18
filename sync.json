@@ -141,6 +141,22 @@
       ]
     },
     {
+      "name": "sharphound",
+      "type": "release",
+      "repo": "SpecterOps/SharpHound",
+      "assets": [
+        "^SharpHound_v[0-9.]+_windows_x86\\.zip$"
+      ],
+      "rename": {
+        "^SharpHound_v[0-9.]+_windows_x86\\.zip$": "$lower"
+      },
+      "extract": true,
+      "extract_keep": [
+        "^SharpHound\\.exe$",
+        "^SharpHound\\.ps1$"
+      ]
+    },
+    {
       "name": "static-binaries",
       "type": "file",
       "repo": "andrew-d/static-binaries",
