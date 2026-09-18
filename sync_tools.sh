@@ -57,17 +57,24 @@ resolve_rename() {
   printf '%s' "$original"
 }
 
-# Extract archive into tools/, keeping only basenames matching extract_keep regexes.
-# Deletes the archive afterward. Kept files are written lowercase into TOOLS_DIR.
+# Extract archive. Deletes the archive afterward.
+# - extract_dir empty: keep only extract_keep basenames, lowercase into TOOLS_DIR/
+# - extract_dir set: unpack into TOOLS_DIR/<extract_dir>/ preserving layout.
+#   extract_keep is then optional (omit = keep the full tree).
 extract_archive() {
   local archive=$1
-  shift
+  local extract_dir=$2
+  shift 2
   local keep_patterns=("$@")
   local archive_path="${TOOLS_DIR}/${archive}"
-  local tmp kept=0
+  local tmp kept=0 dest_root
 
   [[ -f "$archive_path" ]] || die "extract: archive not found: ${archive_path}"
-  [[ "${#keep_patterns[@]}" -gt 0 ]] || die "extract: ${archive}: extract_keep is required when extract=true"
+  if [[ -z "$extract_dir" ]]; then
+    [[ "${#keep_patterns[@]}" -gt 0 ]] || die "extract: ${archive}: extract_keep is required when extract=true"
+  else
+    [[ "$extract_dir" =~ ^[A-Za-z0-9._-]+$ ]] || die "extract: ${archive}: invalid extract_dir: ${extract_dir}"
+  fi
 
   tmp="$(mktemp -d "${TOOLS_DIR}/.extract.XXXXXX")"
 
@@ -87,19 +94,47 @@ extract_archive() {
       ;;
   esac
 
-  local file base dest pattern
-  while IFS= read -r -d '' file; do
-    base="$(basename "$file")"
-    for pattern in "${keep_patterns[@]}"; do
-      if [[ "$base" =~ $pattern ]]; then
-        dest="${base,,}"
-        log "extract: ${archive}: keeping ${base} -> ${dest}"
-        mv -f "$file" "${TOOLS_DIR}/${dest}"
-        kept=$((kept + 1))
-        break
+  local file base dest pattern rel
+
+  if [[ -n "$extract_dir" ]]; then
+    dest_root="${TOOLS_DIR}/${extract_dir}"
+    rm -rf "$dest_root"
+    mkdir -p "$dest_root"
+    while IFS= read -r -d '' file; do
+      rel="${file#"${tmp}/"}"
+      case "$rel" in
+        *..*) rm -rf "$tmp"; die "extract: ${archive}: refused path: ${rel}" ;;
+      esac
+      base="$(basename "$file")"
+      if [[ "${#keep_patterns[@]}" -gt 0 ]]; then
+        local match=0
+        for pattern in "${keep_patterns[@]}"; do
+          if [[ "$base" =~ $pattern ]]; then
+            match=1
+            break
+          fi
+        done
+        [[ "$match" -eq 1 ]] || continue
       fi
-    done
-  done < <(find "$tmp" -type f -print0)
+      mkdir -p "${dest_root}/$(dirname "$rel")"
+      mv -f "$file" "${dest_root}/${rel}"
+      log "extract: ${archive}: keeping ${rel}"
+      kept=$((kept + 1))
+    done < <(find "$tmp" -type f -print0)
+  else
+    while IFS= read -r -d '' file; do
+      base="$(basename "$file")"
+      for pattern in "${keep_patterns[@]}"; do
+        if [[ "$base" =~ $pattern ]]; then
+          dest="${base,,}"
+          log "extract: ${archive}: keeping ${base} -> ${dest}"
+          mv -f "$file" "${TOOLS_DIR}/${dest}"
+          kept=$((kept + 1))
+          break
+        fi
+      done
+    done < <(find "$tmp" -type f -print0)
+  fi
 
   [[ "$kept" -gt 0 ]] || { rm -rf "$tmp"; die "extract: ${archive}: no files matched extract_keep patterns"; }
   rm -rf "$tmp"
@@ -108,8 +143,8 @@ extract_archive() {
 }
 
 sync_release() {
-  local name=$1 repo=$2 rename_json=$3 do_extract=$4
-  shift 4
+  local name=$1 repo=$2 rename_json=$3 do_extract=$4 extract_dir=$5
+  shift 5
   local keep_patterns=()
   local asset_patterns=()
 
@@ -160,7 +195,7 @@ sync_release() {
     downloaded=$((downloaded + 1))
 
     if [[ "$do_extract" == "true" ]]; then
-      extract_archive "$dest_name" "${keep_patterns[@]}"
+      extract_archive "$dest_name" "$extract_dir" "${keep_patterns[@]}"
     fi
   done <<< "$(echo "$release_json" | jq -c '.assets[]?')"
 
@@ -290,17 +325,20 @@ main() {
     case "$type" in
       release)
         mapfile -t assets < <(echo "$tool" | jq -r '.assets[]')
-        local keep_patterns=()
+        local keep_patterns=() extract_dir
+        extract_dir="$(echo "$tool" | jq -r '.extract_dir // empty')"
         if [[ "$do_extract" == "true" ]]; then
           if echo "$tool" | jq -e '.extract_keep | type == "array"' >/dev/null; then
             mapfile -t keep_patterns < <(echo "$tool" | jq -r '.extract_keep[]')
           elif echo "$tool" | jq -e '.extract_keep | type == "string"' >/dev/null; then
             keep_patterns=("$(echo "$tool" | jq -r '.extract_keep')")
+          elif [[ -n "$extract_dir" ]]; then
+            keep_patterns=()
           else
-            die "release: ${name}: extract=true requires extract_keep (string or array of regexes)"
+            die "release: ${name}: extract=true requires extract_keep (or extract_dir)"
           fi
         fi
-        sync_release "$name" "$repo" "$rename_json" "$do_extract" "${keep_patterns[@]}" -- "${assets[@]}"
+        sync_release "$name" "$repo" "$rename_json" "$do_extract" "$extract_dir" "${keep_patterns[@]}" -- "${assets[@]}"
         ;;
       file)
         local ref

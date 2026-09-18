@@ -83,7 +83,7 @@ Each entry in `sync.json` uses a `type` that selects one of four strategies:
 
 Optional per-tool `rename` map rewrites each matched asset basename (regex → dest name). Use `"$lower"` to lowercase the matched name (current default for all tools).
 
-Optional `extract: true` unpacks downloaded `.zip` / `.tar.gz` archives and keeps only files whose basename matches `extract_keep` (string or array of regexes). Kept files are written lowercase into `tools/` and the archive is deleted. Omit `extract` for archives you want to keep intact (e.g. `static-python`).
+Optional `extract: true` unpacks downloaded `.zip` / `.tar.gz` archives and deletes the archive. By default it keeps only files whose basename matches `extract_keep` (string or array of regexes) and writes them lowercase into `tools/`. Set `extract_dir` to unpack into `tools/<extract_dir>/` instead, preserving the archive layout (`Win32/`, `x64/`, …). With `extract_dir`, `extract_keep` is optional — omit it to keep the full tree. Omit `extract` entirely for archives you want to keep intact (e.g. `static-python`).
 
 ## Adding a tool
 
@@ -102,6 +102,22 @@ Add one JSON object to the `tools` array in `sync.json`. No script edits require
   },
   "extract": true,
   "extract_keep": ["^RunasCs\\.exe$", "^RunasCs_net2\\.exe$"]
+}
+```
+
+Unpack a zip into its own folder (layout preserved):
+
+```json
+{
+  "name": "mimikatz",
+  "type": "release",
+  "repo": "gentilkiwi/mimikatz",
+  "assets": ["^mimikatz_trunk\\.zip$"],
+  "rename": {
+    "^mimikatz_trunk\\.zip$": "$lower"
+  },
+  "extract": true,
+  "extract_dir": "mimikatz"
 }
 ```
 
@@ -276,6 +292,7 @@ Flags and examples are in each upstream README (linked from the inventory).
 | `linpeas.sh` | [linPEAS (upstream release)](https://github.com/peass-ng/PEASS-ng) |
 | `linpeas_oscp.sh` | [linPEAS, custom offline OSCP build](https://github.com/peass-ng/PEASS-ng) |
 | `lse.sh` | [Linux smart enumeration](https://github.com/diego-treitos/linux-smart-enumeration) |
+| `mimikatz/` | [Mimikatz (Win32 + x64)](https://github.com/gentilkiwi/mimikatz) |
 | `nc-x64` | [Static netcat Linux x64](https://github.com/mermehr/static-binaries) |
 | `nc-x64.exe` | [Static netcat Windows x64](https://github.com/mermehr/static-binaries) |
 | `nc-x86` | [Static netcat Linux x86](https://github.com/mermehr/static-binaries) |

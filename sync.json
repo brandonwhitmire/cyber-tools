@@ -157,6 +157,19 @@
       ]
     },
     {
+      "name": "mimikatz",
+      "type": "release",
+      "repo": "gentilkiwi/mimikatz",
+      "assets": [
+        "^mimikatz_trunk\\.zip$"
+      ],
+      "rename": {
+        "^mimikatz_trunk\\.zip$": "$lower"
+      },
+      "extract": true,
+      "extract_dir": "mimikatz"
+    },
+    {
       "name": "static-binaries",
       "type": "file",
       "repo": "andrew-d/static-binaries",
