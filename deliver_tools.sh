@@ -20,16 +20,35 @@ usage() {
 Usage: $(basename "$0") [options]
 
   -p, --port, --http-port PORT  HTTP listen port (default: ${HTTP_PORT})
+  -i, --iface, --interface IFACE  advertise IPv4 from this interface
+      --ip ADDR                 advertise this IPv4 to clients
   -h, --help                    Show this help
 
-Environment (CLI overrides env):
-  HTTP_PORT SMB_PORT SERVER_IP CONNECT_IP SERVE_DIR
+Connect IP default: tun0, then eth0, then default-route / other IPv4s.
+Servers still bind ${SERVER_IP:-0.0.0.0}. CLI overrides env.
+
+Environment:
+  HTTP_PORT SMB_PORT SERVER_IP CONNECT_IP CONNECT_IFACE SERVE_DIR
   SMB_SHARE SMB_USER SMB_PASS DEBUG_LOG
 EOF
 }
 
 is_port() {
   [[ "$1" =~ ^[0-9]+$ ]] && ((10#$1 >= 1 && 10#$1 <= 65535))
+}
+
+is_ipv4() {
+  local a b c d
+  [[ "$1" =~ ^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$ ]] || return 1
+  a="${BASH_REMATCH[1]}"
+  b="${BASH_REMATCH[2]}"
+  c="${BASH_REMATCH[3]}"
+  d="${BASH_REMATCH[4]}"
+  ((10#$a <= 255 && 10#$b <= 255 && 10#$c <= 255 && 10#$d <= 255))
+}
+
+is_iface_name() {
+  [[ "$1" =~ ^[A-Za-z0-9][A-Za-z0-9._:-]*$ ]]
 }
 
 parse_args() {
@@ -52,12 +71,40 @@ parse_args() {
         HTTP_PORT="${1#-p}"
         shift
         ;;
+      -i|--iface|--interface)
+        [[ -n "${2:-}" ]] || die "$1 requires an interface"
+        CONNECT_IFACE="$2"
+        CONNECT_IP=""
+        shift 2
+        ;;
+      --iface=*|--interface=*)
+        CONNECT_IFACE="${1#*=}"
+        CONNECT_IP=""
+        shift
+        ;;
+      --ip)
+        [[ -n "${2:-}" ]] || die "$1 requires an IPv4 address"
+        CONNECT_IP="$2"
+        CONNECT_IFACE=""
+        shift 2
+        ;;
+      --ip=*)
+        CONNECT_IP="${1#*=}"
+        CONNECT_IFACE=""
+        shift
+        ;;
       *)
         die "unknown option: $1 (try --help)"
         ;;
     esac
   done
   is_port "$HTTP_PORT" || die "invalid HTTP port: ${HTTP_PORT}"
+  if [[ -n "${CONNECT_IP:-}" ]]; then
+    is_ipv4 "$CONNECT_IP" || die "invalid IPv4: ${CONNECT_IP}"
+  fi
+  if [[ -n "${CONNECT_IFACE:-}" ]]; then
+    is_iface_name "$CONNECT_IFACE" || die "invalid interface: ${CONNECT_IFACE}"
+  fi
 }
 
 parse_args "$@"
@@ -94,6 +141,27 @@ collect_global_ips() {
   done < <(ip -4 -o addr show scope global 2>/dev/null | awk '{print $2,$4}')
 }
 
+# Global-scope IPv4 on IFACE, or fail if the iface is missing / has no address.
+iface_ipv4() {
+  local iface=$1 line addr
+  line="$(ip -4 -o addr show dev "$iface" scope global 2>/dev/null | awk '{print $4; exit}')" || true
+  [[ -n "$line" ]] || return 1
+  addr="${line%%/*}"
+  [[ -n "$addr" ]] && ! is_loopback_ip "$addr" || return 1
+  printf '%s' "$addr"
+}
+
+iface_for_ip() {
+  local pair
+  for pair in "${GLOBAL_IPS[@]+"${GLOBAL_IPS[@]}"}"; do
+    if [[ "${pair#*=}" == "$1" ]]; then
+      printf '%s' "${pair%%=*}"
+      return 0
+    fi
+  done
+  return 1
+}
+
 default_route_ip() {
   local addr
   addr="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for (i = 1; i <= NF; i++) if ($i == "src") { print $(i + 1); exit }}')"
@@ -105,37 +173,65 @@ default_route_ip() {
 }
 
 # CONNECT_IP: address clients dial (never 0.0.0.0).
+# Prefer tun0, then eth0, unless --ip / --iface / CONNECT_IP / CONNECT_IFACE is set.
 resolve_connect_ip() {
   local addr pair
 
+  CONNECT_IFACE_USED=""
+
   if [[ -n "${CONNECT_IP:-}" ]]; then
-    printf '%s' "$CONNECT_IP"
+    CONNECT_IFACE_USED="$(iface_for_ip "$CONNECT_IP" || true)"
+    return 0
+  fi
+
+  if [[ -n "${CONNECT_IFACE:-}" ]]; then
+    if addr="$(iface_ipv4 "$CONNECT_IFACE")"; then
+      CONNECT_IP="$addr"
+      CONNECT_IFACE_USED="$CONNECT_IFACE"
+      return 0
+    fi
+    die "no IPv4 on interface ${CONNECT_IFACE}"
+  fi
+
+  if addr="$(iface_ipv4 tun0)"; then
+    CONNECT_IP="$addr"
+    CONNECT_IFACE_USED="tun0"
+    return 0
+  fi
+
+  if addr="$(iface_ipv4 eth0)"; then
+    CONNECT_IP="$addr"
+    CONNECT_IFACE_USED="eth0"
     return 0
   fi
 
   if ! is_wildcard_ip "$SERVER_IP"; then
-    printf '%s' "$SERVER_IP"
+    CONNECT_IP="$SERVER_IP"
+    CONNECT_IFACE_USED="$(iface_for_ip "$CONNECT_IP" || true)"
     return 0
   fi
 
   if addr="$(default_route_ip)"; then
-    printf '%s' "$addr"
+    CONNECT_IP="$addr"
+    CONNECT_IFACE_USED="$(iface_for_ip "$addr" || true)"
     return 0
   fi
 
   if ((${#GLOBAL_IPS[@]} > 0)); then
     pair="${GLOBAL_IPS[0]}"
-    printf '%s' "${pair#*=}"
+    CONNECT_IFACE_USED="${pair%%=*}"
+    CONNECT_IP="${pair#*=}"
     return 0
   fi
 
   addr="$(hostname -I 2>/dev/null | tr ' ' '\n' | awk 'NF && $1 !~ /^127\./ && $1 !~ /^1\.0\.0\./ { print $1; exit }')"
   if [[ -n "$addr" ]]; then
-    printf '%s' "$addr"
+    CONNECT_IP="$addr"
+    CONNECT_IFACE_USED="$(iface_for_ip "$addr" || true)"
     return 0
   fi
 
-  printf '%s' "<IP>"
+  CONNECT_IP="<IP>"
 }
 
 other_ips_line() {
@@ -310,7 +406,11 @@ print_connect_banner() {
   rule="+$(printf '%*s' $((width - 2)) '' | tr ' ' '-')+"
 
   echo "$rule"
-  box_line "$width" "HTTP  ${http_url}/"
+  if [[ -n "${CONNECT_IFACE_USED:-}" ]]; then
+    box_line "$width" "HTTP  ${http_url}/  ${CONNECT_IFACE_USED}"
+  else
+    box_line "$width" "HTTP  ${http_url}/"
+  fi
   if [[ "$smb_ok" == "1" ]]; then
     box_line "$width" "SMB   ${win_unc}  port ${SMB_PORT}  user:${SMB_USER}  pass:${SMB_PASS}"
   else
@@ -319,9 +419,9 @@ print_connect_banner() {
   box_line "$width" "bind  ${SERVER_IP}:${HTTP_PORT}  smb:${SMB_PORT}  files:${#SERVE_ENTRIES[@]}  ${PWD}"
   extra="$(other_ips_line "$connect_ip")"
   if [[ -n "$extra" ]]; then
-    box_line "$width" "also  ${extra}CONNECT_IP=... to pin"
+    box_line "$width" "also  ${extra}--ip / --iface to pin"
   elif [[ "$connect_ip" == "<IP>" ]]; then
-    box_line "$width" "set CONNECT_IP=<reachable-ipv4> — none detected"
+    box_line "$width" "set --ip <ipv4> or --iface <nic> — none detected"
   fi
   echo "$rule"
 }
@@ -534,7 +634,7 @@ print_ui() {
 # --- main -------------------------------------------------------------------
 
 collect_global_ips
-CONNECT_IP="$(resolve_connect_ip)"
+resolve_connect_ip
 list_serve_entries
 term_size
 

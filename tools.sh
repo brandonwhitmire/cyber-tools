@@ -129,13 +129,25 @@ fi
 set -euo pipefail
 
 case "${1:-}" in
-  --install|-i)
+  --install)
     _cyber_tools_install
+    ;;
+  -i)
+    # bare -i still installs; -i tun0 / -i eth0 goes to deliver_tools.sh
+    if [[ $# -eq 1 ]]; then
+      _cyber_tools_install
+    else
+      REPO="$(cyber_tools_find)"
+      cd "$REPO"
+      exec ./deliver_tools.sh "$@"
+    fi
     ;;
   --help|-h)
     echo "Usage: tools.sh [--install] [deliver_tools.sh options...]"
     echo "  tools.sh              find cyber-tools and run deliver_tools.sh"
     echo "  tools.sh --install    append a source line to ~/.zshrc or ~/.bashrc"
+    echo "  tools.sh -i tun0      advertise tun0 (default: tun0, then eth0)"
+    echo "  tools.sh --ip 10.10.14.5   pin the connect IPv4"
     echo "  tools.sh -p 9000      HTTP port (also --port / --http-port; default 8888)"
     echo "  source tools.sh       define a \`tools\` function in the current shell"
     ;;

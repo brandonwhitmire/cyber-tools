@@ -49,7 +49,16 @@ HTTP port defaults to **8888**. Override with `-p` / `--port` / `--http-port`, o
 tools --port 9000
 ```
 
-`CONNECT_IP` is optional — when unset, the script uses `SERVER_IP` if it is a real address, otherwise the default-route IPv4. Other local IPv4s are listed so you can pin `tun0` vs `eth0`. The bind line also prints `$PWD`.
+The advertised connect IP (wget / SMB URLs) defaults to **tun0**, then **eth0**, then the default-route IPv4. Servers still bind `0.0.0.0`. Pin with `--ip` / `-i` / `--iface`, or `CONNECT_IP` / `CONNECT_IFACE`:
+
+```bash
+./deliver_tools.sh --ip 10.10.14.5
+./deliver_tools.sh -i tun0
+./deliver_tools.sh --iface eth0
+tools --ip 10.10.14.5
+```
+
+Other local IPv4s are listed as `also`. The bind line also prints `$PWD`.
 
 ### `tools` command
 
