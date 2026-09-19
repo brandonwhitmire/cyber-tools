@@ -424,6 +424,7 @@
     },
     {
       "name": "godpotato",
+      "dest_dir": "potato_priv_escs",
       "type": "release",
       "repo": "BeichenDream/GodPotato",
       "assets": [
@@ -439,6 +440,7 @@
     },
     {
       "name": "juicy-potato",
+      "dest_dir": "potato_priv_escs",
       "type": "release",
       "repo": "ohpe/juicy-potato",
       "assets": [
@@ -450,6 +452,7 @@
     },
     {
       "name": "juicy-potato-ng",
+      "dest_dir": "potato_priv_escs",
       "type": "release",
       "repo": "antonioCoco/JuicyPotatoNG",
       "assets": [
@@ -465,6 +468,7 @@
     },
     {
       "name": "sigmapotato",
+      "dest_dir": "potato_priv_escs",
       "type": "release",
       "repo": "tylerdotrar/SigmaPotato",
       "assets": [
@@ -478,6 +482,7 @@
     },
     {
       "name": "sigmapotato-ps1",
+      "dest_dir": "potato_priv_escs",
       "type": "file",
       "repo": "tylerdotrar/SigmaPotato",
       "ref": "main",
@@ -490,6 +495,7 @@
     },
     {
       "name": "sweetpotato",
+      "dest_dir": "potato_priv_escs",
       "type": "file",
       "repo": "uknowsec/SweetPotato",
       "ref": "master",
@@ -502,6 +508,7 @@
     },
     {
       "name": "roguepotato",
+      "dest_dir": "potato_priv_escs",
       "type": "release",
       "repo": "antonioCoco/RoguePotato",
       "assets": [
@@ -515,17 +522,6 @@
         "^RoguePotato\\.exe$",
         "^RogueOxidResolver\\.exe$"
       ]
-    },
-    {
-      "name": "static-python",
-      "type": "release",
-      "repo": "indygreg/python-build-standalone",
-      "assets": [
-        "^cpython-3\\.11\\..*-x86_64-pc-windows-msvc-install_only\\.tar\\.gz$"
-      ],
-      "rename": {
-        "^cpython-3\\.11\\..*-x86_64-pc-windows-msvc-install_only\\.tar\\.gz$": "$lower"
-      }
     },
     {
       "name": "ligolo-ng",

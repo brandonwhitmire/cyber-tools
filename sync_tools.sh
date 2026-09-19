@@ -57,14 +57,29 @@ resolve_rename() {
   printf '%s' "$original"
 }
 
+# Optional subdirectory under TOOLS_DIR (e.g. potato_priv_escs). Empty = TOOLS_DIR.
+tool_outdir() {
+  local dest_dir=${1:-}
+  local out="$TOOLS_DIR"
+  if [[ -n "$dest_dir" ]]; then
+    [[ "$dest_dir" =~ ^[A-Za-z0-9._-]+$ ]] || die "invalid dest_dir: ${dest_dir}"
+    out="${TOOLS_DIR}/${dest_dir}"
+    mkdir -p "$out"
+  fi
+  printf '%s' "$out"
+}
+
 # Extract archive. Deletes the archive afterward.
 # - extract_dir empty: keep only extract_keep basenames, lowercase into TOOLS_DIR/
+#   (or TOOLS_DIR/<dest_dir>/ when dest_dir is set)
+# - extract_dir set: unpack into TOOLS_DIR/<extract_dir>/ preserving layout.
 # - extract_dir set: unpack into TOOLS_DIR/<extract_dir>/ preserving layout.
 #   extract_keep is then optional (omit = keep the full tree).
 extract_archive() {
   local archive=$1
   local extract_dir=$2
-  shift 2
+  local dest_dir=$3
+  shift 3
   local keep_patterns=("$@")
   local archive_path="${TOOLS_DIR}/${archive}"
   local tmp kept=0 dest_root
@@ -122,15 +137,17 @@ extract_archive() {
       kept=$((kept + 1))
     done < <(find "$tmp" -type f -print0)
   else
+    local out
+    out="$(tool_outdir "$dest_dir")"
     while IFS= read -r -d '' file; do
       base="$(basename "$file")"
       for pattern in "${keep_patterns[@]}"; do
         if [[ "$base" =~ $pattern ]]; then
           dest="${base,,}"
-          log "extract: ${archive}: keeping ${base} -> ${dest}"
-          mv -f "$file" "${TOOLS_DIR}/${dest}"
+          log "extract: ${archive}: keeping ${base} -> ${out#"${TOOLS_DIR}"/}/${dest}"
+          mv -f "$file" "${out}/${dest}"
           if [[ "$dest" != *.* ]]; then
-            chmod +x "${TOOLS_DIR}/${dest}" || true
+            chmod +x "${out}/${dest}" || true
           fi
           kept=$((kept + 1))
           break
@@ -146,8 +163,8 @@ extract_archive() {
 }
 
 sync_release() {
-  local name=$1 repo=$2 rename_json=$3 do_extract=$4 extract_dir=$5
-  shift 5
+  local name=$1 repo=$2 rename_json=$3 do_extract=$4 extract_dir=$5 dest_dir=$6
+  shift 6
   local keep_patterns=()
   local asset_patterns=()
 
@@ -193,12 +210,18 @@ sync_release() {
     [[ "$match" -eq 1 ]] || continue
 
     dest_name="$(resolve_rename "$asset_name" "$rename_json")"
-    log "release: ${name}: downloading ${asset_name} -> ${dest_name}"
-    curl -fsSL -o "${TOOLS_DIR}/${dest_name}" "$asset_url"
+    local out
+    if [[ "$do_extract" == "true" ]]; then
+      out="$TOOLS_DIR"
+    else
+      out="$(tool_outdir "$dest_dir")"
+    fi
+    log "release: ${name}: downloading ${asset_name} -> ${out#"${TOOLS_DIR}"/}/${dest_name}"
+    curl -fsSL -o "${out}/${dest_name}" "$asset_url"
     downloaded=$((downloaded + 1))
 
     if [[ "$do_extract" == "true" ]]; then
-      extract_archive "$dest_name" "$extract_dir" "${keep_patterns[@]}"
+      extract_archive "$dest_name" "$extract_dir" "$dest_dir" "${keep_patterns[@]}"
     fi
   done <<< "$(echo "$release_json" | jq -c '.assets[]?')"
 
@@ -207,9 +230,11 @@ sync_release() {
 }
 
 sync_file() {
-  local name=$1 repo=$2 ref=$3 rename_json=$4
-  shift 4
+  local name=$1 repo=$2 ref=$3 rename_json=$4 dest_dir=$5
+  shift 5
   local paths=("$@")
+  local out
+  out="$(tool_outdir "$dest_dir")"
 
   log "file: ${name} (${repo}@${ref})"
 
@@ -219,8 +244,8 @@ sync_file() {
     base="$(basename "$path")"
     dest_name="$(resolve_rename "$base" "$rename_json")"
     url="https://raw.githubusercontent.com/${repo}/${ref}/${path}"
-    log "file: ${name}: fetching ${path} -> ${dest_name}"
-    curl -fsSL -o "${TOOLS_DIR}/${dest_name}" "$url"
+    log "file: ${name}: fetching ${path} -> ${out#"${TOOLS_DIR}"/}/${dest_name}"
+    curl -fsSL -o "${out}/${dest_name}" "$url"
   done
 
   log "file: ${name}: done (${#paths[@]} file(s))"
@@ -331,8 +356,9 @@ main() {
     case "$type" in
       release)
         mapfile -t assets < <(echo "$tool" | jq -r '.assets[]')
-        local keep_patterns=() extract_dir
+        local keep_patterns=() extract_dir dest_dir
         extract_dir="$(echo "$tool" | jq -r '.extract_dir // empty')"
+        dest_dir="$(echo "$tool" | jq -r '.dest_dir // empty')"
         if [[ "$do_extract" == "true" ]]; then
           if echo "$tool" | jq -e '.extract_keep | type == "array"' >/dev/null; then
             mapfile -t keep_patterns < <(echo "$tool" | jq -r '.extract_keep[]')
@@ -344,13 +370,14 @@ main() {
             die "release: ${name}: extract=true requires extract_keep (or extract_dir)"
           fi
         fi
-        sync_release "$name" "$repo" "$rename_json" "$do_extract" "$extract_dir" "${keep_patterns[@]}" -- "${assets[@]}"
+        sync_release "$name" "$repo" "$rename_json" "$do_extract" "$extract_dir" "$dest_dir" "${keep_patterns[@]}" -- "${assets[@]}"
         ;;
       file)
-        local ref
+        local ref dest_dir
         ref="$(echo "$tool" | jq -r '.ref // "main"')"
+        dest_dir="$(echo "$tool" | jq -r '.dest_dir // empty')"
         mapfile -t paths < <(echo "$tool" | jq -r '.paths[]')
-        sync_file "$name" "$repo" "$ref" "$rename_json" "${paths[@]}"
+        sync_file "$name" "$repo" "$ref" "$rename_json" "$dest_dir" "${paths[@]}"
         ;;
       repo)
         local ref

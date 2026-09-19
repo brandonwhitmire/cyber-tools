@@ -20,13 +20,6 @@ log "fetching AccessChk from Sysinternals (official source)..."
 /usr/bin/curl -fsSL -o "${TOOLS_DIR}/accesschk.exe" "https://live.sysinternals.com/accesschk.exe"
 /usr/bin/curl -fsSL -o "${TOOLS_DIR}/accesschk64.exe" "https://live.sysinternals.com/accesschk64.exe"
 
-python_archive="$(find "${TOOLS_DIR}" -maxdepth 1 -name 'cpython-*-install_only.tar.gz' -print -quit 2>/dev/null || true)"
-if [[ -n "${python_archive}" ]]; then
-  log "extracting portable Windows Python into tools/python/..."
-  rm -rf "${TOOLS_DIR}/python"
-  tar -xzf "${python_archive}" -C "${TOOLS_DIR}"
-fi
-
 log "setting execute bits on scripts and Linux binaries..."
 find "${TOOLS_DIR}" -maxdepth 1 -type f \( \
   -name '*.sh' -o \

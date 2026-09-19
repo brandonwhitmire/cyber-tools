@@ -92,7 +92,9 @@ Each entry in `sync.json` uses a `type` that selects one of four strategies:
 
 Optional per-tool `rename` map rewrites each matched asset basename (regex → dest name). Use `"$lower"` to lowercase the matched name (current default for all tools).
 
-Optional `extract: true` unpacks downloaded `.zip` / `.tar.gz` archives and deletes the archive. By default it keeps only files whose basename matches `extract_keep` (string or array of regexes) and writes them lowercase into `tools/`. Set `extract_dir` to unpack into `tools/<extract_dir>/` instead, preserving the archive layout (`Win32/`, `x64/`, …). With `extract_dir`, `extract_keep` is optional — omit it to keep the full tree. Omit `extract` entirely for archives you want to keep intact (e.g. `static-python`).
+Optional `dest_dir` writes kept files into `tools/<dest_dir>/` instead of `tools/` (used for the potato family). It applies to `release` and `file` tools, including flatten-extracts. Multiple tools may share one `dest_dir`; files are overwritten in place and the folder is not wiped.
+
+Optional `extract: true` unpacks downloaded `.zip` / `.tar.gz` archives and deletes the archive. By default it keeps only files whose basename matches `extract_keep` (string or array of regexes) and writes them lowercase into `tools/` (or `tools/<dest_dir>/`). Set `extract_dir` to unpack into `tools/<extract_dir>/` instead, preserving the archive layout (`Win32/`, `x64/`, …). With `extract_dir`, `extract_keep` is optional — omit it to keep the full tree. Omit `extract` for archives you want to keep intact.
 
 ## Adding a tool
 
@@ -127,6 +129,23 @@ Unpack a zip into its own folder (layout preserved):
   },
   "extract": true,
   "extract_dir": "mimikatz"
+}
+```
+
+Write several tools into a shared folder (`dest_dir` is not wiped between tools):
+
+```json
+{
+  "name": "godpotato",
+  "dest_dir": "potato_priv_escs",
+  "type": "release",
+  "repo": "BeichenDream/GodPotato",
+  "assets": ["^GodPotato-NET2\\.exe$", "^GodPotato-NET35\\.exe$", "^GodPotato-NET4\\.exe$"],
+  "rename": {
+    "^GodPotato-NET2\\.exe$": "$lower",
+    "^GodPotato-NET35\\.exe$": "$lower",
+    "^GodPotato-NET4\\.exe$": "$lower"
+  }
 }
 ```
 
@@ -188,7 +207,6 @@ Requires build tooling on the runner (e.g. Go + UPX for ligolo-ng, Go for udpx).
 Some tools are not in `sync.json` because they have no suitable GitHub source:
 
 - **AccessChk** — downloaded from Sysinternals (`live.sysinternals.com`) as `tools/accesschk.exe` and `tools/accesschk64.exe`.
-- **Portable Python** — the `static-python` release tarball is extracted into `tools/python/` after sync.
 - **linpeas_oscp.sh** — rebuilt from PEASS-ng's builder when `linpeas_oscp.json` or upstream builder inputs change (`./build_linpeas.sh`). Stock `linpeas.sh` still comes from the PEASS-ng release.
 
 ## Custom linpeas (offline)
@@ -236,7 +254,7 @@ The workflow runs twice a week (Monday and Thursday at 06:00 UTC) and on manual 
 
 ## Potatoes
 
-These binaries expect `SeImpersonatePrivilege` or `SeAssignPrimaryTokenPrivilege` (`whoami /priv`). If neither is present, they are not the path.
+These binaries live in `tools/potato_priv_escs/`. They expect `SeImpersonatePrivilege` or `SeAssignPrimaryTokenPrivilege` (`whoami /priv`). If neither is present, they are not the path.
 
 ### .NET version (pick the matching build)
 
@@ -274,7 +292,6 @@ Flags and examples are in each upstream README (linked from the inventory).
 | `accesschk.exe` | [Sysinternals access checker (x86)](https://learn.microsoft.com/en-us/sysinternals/downloads/accesschk) |
 | `accesschk64.exe` | [Sysinternals access checker (x64)](https://learn.microsoft.com/en-us/sysinternals/downloads/accesschk) |
 | `bloodhound-cli` | [BloodHound CLI for Linux](https://github.com/SpecterOps/bloodhound-cli) |
-| `cpython-3.11.15+20260807-x86_64-pc-windows-msvc-install_only.tar.gz` | [Standalone Windows Python build](https://github.com/indygreg/python-build-standalone) |
 | `domainpasswordspray.ps1` | [AD password spraying script](https://github.com/dafthack/DomainPasswordSpray) |
 | `firefox_decrypt.py` | [Firefox password decryptor](https://github.com/unode/firefox_decrypt) |
 | `godpotato-net2.exe` | [Potato priv-esc for .NET 2](https://github.com/BeichenDream/GodPotato) |
