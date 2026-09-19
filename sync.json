@@ -157,6 +157,24 @@
       ]
     },
     {
+      "name": "rusthound-ce",
+      "type": "release",
+      "repo": "g0h4n/RustHound-CE",
+      "assets": [
+        "^rusthound-ce-Linux-gnu-x86_64\\.tar\\.gz$",
+        "^rusthound-ce-Windows-msvc-x86_64\\.zip$"
+      ],
+      "rename": {
+        "^rusthound-ce-Linux-gnu-x86_64\\.tar\\.gz$": "$lower",
+        "^rusthound-ce-Windows-msvc-x86_64\\.zip$": "$lower"
+      },
+      "extract": true,
+      "extract_keep": [
+        "^rusthound-ce$",
+        "^rusthound-ce\\.exe$"
+      ]
+    },
+    {
       "name": "mimikatz",
       "type": "release",
       "repo": "gentilkiwi/mimikatz",

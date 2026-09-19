@@ -325,6 +325,8 @@ Flags and examples are in each upstream README (linked from the inventory).
 | `roothound/` | [RootHound Linux privesc mapper (full repo)](https://github.com/Noz2/RootHound) |
 | `runascs.exe` | [RunasCs privilege tool](https://github.com/antonioCoco/RunasCs) |
 | `runascs_net2.exe` | [RunasCs for .NET 2](https://github.com/antonioCoco/RunasCs) |
+| `rusthound-ce` | [BloodHound CE collector, incl. certificates (Linux)](https://github.com/g0h4n/RustHound-CE) |
+| `rusthound-ce.exe` | [BloodHound CE collector, incl. certificates (Windows)](https://github.com/g0h4n/RustHound-CE) |
 | `seatbelt.exe` | [GhostPack host survey](https://github.com/r3motecontrol/Ghostpack-CompiledBinaries) |
 | `sebackupprivilegecmdlets.dll` | [SeBackupPrivilege PowerShell cmdlets](https://github.com/giuliano108/SeBackupPrivilege) |
 | `sebackupprivilegeutils.dll` | [SeBackupPrivilege native helper](https://github.com/giuliano108/SeBackupPrivilege) |

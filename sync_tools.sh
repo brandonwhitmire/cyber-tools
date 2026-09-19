@@ -129,6 +129,9 @@ extract_archive() {
           dest="${base,,}"
           log "extract: ${archive}: keeping ${base} -> ${dest}"
           mv -f "$file" "${TOOLS_DIR}/${dest}"
+          if [[ "$dest" != *.* ]]; then
+            chmod +x "${TOOLS_DIR}/${dest}" || true
+          fi
           kept=$((kept + 1))
           break
         fi
