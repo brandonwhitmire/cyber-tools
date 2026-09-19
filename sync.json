@@ -535,6 +535,24 @@
       }
     },
     {
+      "name": "udpx",
+      "type": "build",
+      "repo": "nullt3r/udpx",
+      "ref": "main",
+      "commands": [
+        "CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags=\"-s -w\" -o udpx ./cmd/udpx",
+        "CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags=\"-s -w\" -o udpx.exe ./cmd/udpx"
+      ],
+      "artifacts": [
+        "^udpx$",
+        "^udpx\\.exe$"
+      ],
+      "rename": {
+        "^udpx$": "$lower",
+        "^udpx\\.exe$": "$lower"
+      }
+    },
+    {
       "name": "static-netcat",
       "type": "file",
       "repo": "mermehr/static-binaries",

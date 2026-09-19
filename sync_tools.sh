@@ -296,8 +296,11 @@ sync_build() {
   done < <(find "${tmp}/src" -maxdepth 1 -type f -print0)
 
   rm -rf "$tmp"
-  # Also remove any leftover full-repo checkout from an older sync
-  rm -rf "${TOOLS_DIR}/${name}"
+  # Drop a leftover full-repo checkout from an older sync (directory only —
+  # do not delete a same-named binary artifact like tools/udpx).
+  if [[ -d "${TOOLS_DIR}/${name}" ]]; then
+    rm -rf "${TOOLS_DIR}/${name}"
+  fi
 
   [[ "$kept" -gt 0 ]] || die "build: ${name}: no artifacts matched patterns"
   log "build: ${name}: done (${kept} artifact(s))"

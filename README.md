@@ -158,7 +158,7 @@ Unpack a zip into its own folder (layout preserved):
 
 ### Build (temp clone → compile → keep binaries)
 
-Requires build tooling on the runner (e.g. Go + UPX for ligolo-ng). The clone is discarded after artifacts are copied.
+Requires build tooling on the runner (e.g. Go + UPX for ligolo-ng, Go for udpx). The clone is discarded after artifacts are copied.
 
 ```json
 {
@@ -230,7 +230,7 @@ GITHUB_TOKEN=<PAT> ./sync_tools.sh
 
 ## GitHub Action setup
 
-The workflow runs twice a week (Monday and Thursday at 06:00 UTC) and on manual trigger (`workflow_dispatch`). It installs **Go**, **UPX** (for `type: build` tools like ligolo-ng), and **PyYAML** (for the linpeas builder), runs `sync_tools.sh` then `build_linpeas.sh`, stages all changes, and commits/pushes only when `git diff --cached` is non-empty.
+The workflow runs twice a week (Monday and Thursday at 06:00 UTC) and on manual trigger (`workflow_dispatch`). It installs **Go** (for `type: build` tools like ligolo-ng and udpx), **UPX** (ligolo-ng), and **PyYAML** (for the linpeas builder), runs `sync_tools.sh` then `build_linpeas.sh`, stages all changes, and commits/pushes only when `git diff --cached` is non-empty.
 
 **Required repo setting:** Settings → Actions → General → Workflow permissions → **Read and write permissions**.
 
@@ -339,6 +339,8 @@ Flags and examples are in each upstream README (linked from the inventory).
 | `socatx64.exe` | [Static socat Windows x64](https://github.com/3ndG4me/socat) |
 | `socatx86.exe` | [Static socat Windows x86](https://github.com/3ndG4me/socat) |
 | `sweetpotato.exe` | [SweetPotato priv-esc](https://github.com/uknowsec/SweetPotato) |
+| `udpx` | [UDP service scanner (Linux)](https://github.com/nullt3r/udpx) |
+| `udpx.exe` | [UDP service scanner (Windows)](https://github.com/nullt3r/udpx) |
 | `wesng/` | [Windows Exploit Suggester NG](https://github.com/bitsadmin/wesng) |
 | `winpeasx64.exe` | [Windows priv-esc enumerator](https://github.com/peass-ng/PEASS-ng) |
 | `winpeasx86.exe` | [Windows priv-esc enumerator](https://github.com/peass-ng/PEASS-ng) |
