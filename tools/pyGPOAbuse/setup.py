@@ -1,0 +1,17 @@
+from setuptools import setup, find_packages
+
+with open('requirements.txt') as f:
+    install_requires = f.read().splitlines()
+
+setup(
+    name='pygpoabuse',
+    version='0.4.1',
+    packages=find_packages(),
+    install_requires=install_requires,
+    package_data={'': ['*']},
+    entry_points={
+        'console_scripts': [
+            'pygpoabuse=pygpoabuse.cli:main',
+        ],
+    },
+)

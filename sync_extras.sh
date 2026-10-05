@@ -20,6 +20,11 @@ log "fetching AccessChk from Sysinternals (official source)..."
 /usr/bin/curl -fsSL -o "${TOOLS_DIR}/accesschk.exe" "https://live.sysinternals.com/accesschk.exe"
 /usr/bin/curl -fsSL -o "${TOOLS_DIR}/accesschk64.exe" "https://live.sysinternals.com/accesschk64.exe"
 
+log "fetching Strings from Sysinternals (official source)..."
+/usr/bin/curl -fsSL -o "${TOOLS_DIR}/strings.exe" "https://live.sysinternals.com/strings.exe"
+/usr/bin/curl -fsSL -o "${TOOLS_DIR}/strings64.exe" "https://live.sysinternals.com/strings64.exe"
+/usr/bin/curl -fsSL -o "${TOOLS_DIR}/strings64a.exe" "https://live.sysinternals.com/ARM64/strings64a.exe"
+
 log "setting execute bits on scripts and Linux binaries..."
 find "${TOOLS_DIR}" -maxdepth 1 -type f \( \
   -name '*.sh' -o \
@@ -39,6 +44,9 @@ rm -f "${TOOLS_DIR}/roothound.py" "${TOOLS_DIR}/roothound-collector.sh"
 if [[ -d "${TOOLS_DIR}/roothound" ]]; then
   find "${TOOLS_DIR}/roothound" -type f \( -name '*.sh' -o -name '*.py' \) -exec chmod +x {} + 2>/dev/null || true
 fi
+if [[ -d "${TOOLS_DIR}/pyGPOAbuse" ]]; then
+  find "${TOOLS_DIR}/pyGPOAbuse" -type f -name '*.py' -exec chmod +x {} + 2>/dev/null || true
+fi
 if [[ -f "${TOOLS_DIR}/wesng/wes.py" ]]; then
   chmod +x "${TOOLS_DIR}/wesng/wes.py" 2>/dev/null || true
 fi
@@ -48,5 +56,6 @@ chmod +x "${ROOT}/sync_tools.sh" "${ROOT}/deliver_tools.sh" "${ROOT}/sync_extras
 log "sync_extras complete"
 log "  tools:     ${TOOLS_DIR}/"
 log "  accesschk: ${TOOLS_DIR}/accesschk.exe , ${TOOLS_DIR}/accesschk64.exe"
+log "  strings:   ${TOOLS_DIR}/strings.exe , ${TOOLS_DIR}/strings64.exe , ${TOOLS_DIR}/strings64a.exe"
 log "  deliver:   ${ROOT}/deliver_tools.sh"
 log "  launcher:  ${ROOT}/tools.sh"

@@ -70,7 +70,7 @@ tool_outdir() {
 }
 
 # Extract archive. Deletes the archive afterward.
-# - extract_dir empty: keep only extract_keep basenames, lowercase into TOOLS_DIR/
+# - extract_dir empty: keep only extract_keep basenames under their original names in TOOLS_DIR/
 #   (or TOOLS_DIR/<dest_dir>/ when dest_dir is set)
 # - extract_dir set: unpack into TOOLS_DIR/<extract_dir>/ preserving layout.
 # - extract_dir set: unpack into TOOLS_DIR/<extract_dir>/ preserving layout.
@@ -143,7 +143,7 @@ extract_archive() {
       base="$(basename "$file")"
       for pattern in "${keep_patterns[@]}"; do
         if [[ "$base" =~ $pattern ]]; then
-          dest="${base,,}"
+          dest="${base}"
           log "extract: ${archive}: keeping ${base} -> ${out#"${TOOLS_DIR}"/}/${dest}"
           mv -f "$file" "${out}/${dest}"
           if [[ "$dest" != *.* ]]; then

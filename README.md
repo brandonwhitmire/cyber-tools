@@ -90,11 +90,11 @@ Each entry in `sync.json` uses a `type` that selects one of four strategies:
 | `repo` | Shallow-clones the repo into `tools/<name>/` and strips `.git` |
 | `build` | Temp-clones the repo, runs `commands`, keeps only `artifacts` in `tools/` |
 
-Optional per-tool `rename` map rewrites each matched asset basename (regex → dest name). Use `"$lower"` to lowercase the matched name (current default for all tools).
+Optional per-tool `rename` map rewrites each matched asset basename (regex → dest name). Omit it and the file keeps the upstream name. Set a value to `"$lower"` only when you explicitly want that one file lowercased.
 
 Optional `dest_dir` writes kept files into `tools/<dest_dir>/` instead of `tools/` (used for the potato family). It applies to `release` and `file` tools, including flatten-extracts. Multiple tools may share one `dest_dir`; files are overwritten in place and the folder is not wiped.
 
-Optional `extract: true` unpacks downloaded `.zip` / `.tar.gz` archives and deletes the archive. By default it keeps only files whose basename matches `extract_keep` (string or array of regexes) and writes them lowercase into `tools/` (or `tools/<dest_dir>/`). Set `extract_dir` to unpack into `tools/<extract_dir>/` instead, preserving the archive layout (`Win32/`, `x64/`, …). With `extract_dir`, `extract_keep` is optional — omit it to keep the full tree. Omit `extract` for archives you want to keep intact.
+Optional `extract: true` unpacks downloaded `.zip` / `.tar.gz` archives and deletes the archive. By default it keeps only files whose basename matches `extract_keep` (string or array of regexes) and writes them under their original basename into `tools/` (or `tools/<dest_dir>/`). Set `extract_dir` to unpack into `tools/<extract_dir>/` instead, preserving the archive layout (`Win32/`, `x64/`, …). With `extract_dir`, `extract_keep` is optional — omit it to keep the full tree. Omit `extract` for archives you want to keep intact.
 
 ## Adding a tool
 
@@ -108,9 +108,6 @@ Add one JSON object to the `tools` array in `sync.json`. No script edits require
   "type": "release",
   "repo": "antonioCoco/RunasCs",
   "assets": ["^RunasCs\\.zip$"],
-  "rename": {
-    "^RunasCs\\.zip$": "$lower"
-  },
   "extract": true,
   "extract_keep": ["^RunasCs\\.exe$", "^RunasCs_net2\\.exe$"]
 }
@@ -124,9 +121,6 @@ Unpack a zip into its own folder (layout preserved):
   "type": "release",
   "repo": "gentilkiwi/mimikatz",
   "assets": ["^mimikatz_trunk\\.zip$"],
-  "rename": {
-    "^mimikatz_trunk\\.zip$": "$lower"
-  },
   "extract": true,
   "extract_dir": "mimikatz"
 }
@@ -140,12 +134,7 @@ Write several tools into a shared folder (`dest_dir` is not wiped between tools)
   "dest_dir": "potato_priv_escs",
   "type": "release",
   "repo": "BeichenDream/GodPotato",
-  "assets": ["^GodPotato-NET2\\.exe$", "^GodPotato-NET35\\.exe$", "^GodPotato-NET4\\.exe$"],
-  "rename": {
-    "^GodPotato-NET2\\.exe$": "$lower",
-    "^GodPotato-NET35\\.exe$": "$lower",
-    "^GodPotato-NET4\\.exe$": "$lower"
-  }
+  "assets": ["^GodPotato-NET2\\.exe$", "^GodPotato-NET35\\.exe$", "^GodPotato-NET4\\.exe$"]
 }
 ```
 
@@ -157,10 +146,7 @@ Write several tools into a shared folder (`dest_dir` is not wiped between tools)
   "type": "file",
   "repo": "PowerShellMafia/PowerSploit",
   "ref": "master",
-  "paths": ["Privesc/PowerUp.ps1"],
-  "rename": {
-    "^PowerUp\\.ps1$": "$lower"
-  }
+  "paths": ["Privesc/PowerUp.ps1"]
 }
 ```
 
@@ -207,6 +193,7 @@ Requires build tooling on the runner (e.g. Go + UPX for ligolo-ng, Go for udpx).
 Some tools are not in `sync.json` because they have no suitable GitHub source:
 
 - **AccessChk** — downloaded from Sysinternals (`live.sysinternals.com`) as `tools/accesschk.exe` and `tools/accesschk64.exe`.
+- **Strings** — downloaded from Sysinternals (`live.sysinternals.com`) as `tools/strings.exe` (x86), `tools/strings64.exe` (x64), and `tools/strings64a.exe` (ARM64).
 - **linpeas_oscp.sh** — rebuilt from PEASS-ng's builder when `linpeas_oscp.json` or upstream builder inputs change (`./build_linpeas.sh`). Stock `linpeas.sh` still comes from the PEASS-ng release.
 
 ## Custom linpeas (offline)
@@ -266,22 +253,22 @@ reg query "HKLM\SOFTWARE\Microsoft\NET Framework Setup\NDP" /s | findstr /i "ver
 
 | Highest NDP version | Binary |
 |---------------------|--------|
-| v2.0.x | `godpotato-net2.exe` |
-| v3.5 | `godpotato-net35.exe` or `sigmapotatocore.exe` |
-| v4.x | `godpotato-net4.exe` or `sigmapotato.exe` |
+| v2.0.x | `GodPotato-NET2.exe` |
+| v3.5 | `GodPotato-NET35.exe` or `SigmaPotatoCore.exe` |
+| v4.x | `GodPotato-NET4.exe` or `SigmaPotato.exe` |
 
-`sigmapotato.exe` is compiled against .NET 4.8 and runs on any Framework install. `sigmapotatocore.exe` needs 3.5 on disk (better for PowerShell Core reflection). `invoke-sigmapotato.ps1` is the in-memory helper.
+`SigmaPotato.exe` is compiled against .NET 4.8 and runs on any Framework install. `SigmaPotatoCore.exe` needs 3.5 on disk (better for PowerShell Core reflection). `Invoke-SigmaPotato.ps1` is the in-memory helper.
 
 ### Which potato
 
 | Binary | Year | Mechanism | Works on | Notes |
 |--------|------|-----------|----------|-------|
-| `juicypotato.exe` | 2018 | DCOM/NTLM via COM CLSID | Win 7 / Server 2008–2016 / Win 10 before 1809 | Dead after 1809 / Server 2019 |
-| `juicypotatong.exe` | 2022 | JuicyPotato successor | Win 10 1809+ / Server 2019+ | When classic Juicy is patched |
-| `roguepotato.exe` | 2020 | Fake OXID resolver + named pipe | Server 2019+, Win 10 1809+ | Needs outbound 135 redirect (`socat`) |
-| `sweetpotato.exe` | 2020 | DCOM / WinRM / EfsRpc + named pipe | Win 10, Server 2016/2019 | Multi-vector |
-| `godpotato-net*.exe` | 2022 | Named pipe RPC + OXID bypass | Server 2012–2022, Win 10/11 | Default; match .NET above |
-| `sigmapotato.exe` | 2023 | GodPotato fork + reflection | Win 8–11, Server 2012–2022 | Same OS range; in-memory via the `.ps1` |
+| `JuicyPotato.exe` | 2018 | DCOM/NTLM via COM CLSID | Win 7 / Server 2008–2016 / Win 10 before 1809 | Dead after 1809 / Server 2019 |
+| `JuicyPotatoNG.exe` | 2022 | JuicyPotato successor | Win 10 1809+ / Server 2019+ | When classic Juicy is patched |
+| `RoguePotato.exe` | 2020 | Fake OXID resolver + named pipe | Server 2019+, Win 10 1809+ | Needs outbound 135 redirect (`socat`) |
+| `SweetPotato.exe` | 2020 | DCOM / WinRM / EfsRpc + named pipe | Win 10, Server 2016/2019 | Multi-vector |
+| `GodPotato-NET*.exe` | 2022 | Named pipe RPC + OXID bypass | Server 2012–2022, Win 10/11 | Default; match .NET above |
+| `SigmaPotato.exe` | 2023 | GodPotato fork + reflection | Win 8–11, Server 2012–2022 | Same OS range; in-memory via the `.ps1` |
 
 Flags and examples are in each upstream README (linked from the inventory).
 
@@ -292,25 +279,25 @@ Flags and examples are in each upstream README (linked from the inventory).
 | `accesschk.exe` | [Sysinternals access checker (x86)](https://learn.microsoft.com/en-us/sysinternals/downloads/accesschk) |
 | `accesschk64.exe` | [Sysinternals access checker (x64)](https://learn.microsoft.com/en-us/sysinternals/downloads/accesschk) |
 | `bloodhound-cli` | [BloodHound CLI for Linux](https://github.com/SpecterOps/bloodhound-cli) |
-| `domainpasswordspray.ps1` | [AD password spraying script](https://github.com/dafthack/DomainPasswordSpray) |
+| `DomainPasswordSpray.ps1` | [AD password spraying script](https://github.com/dafthack/DomainPasswordSpray) |
 | `firefox_decrypt.py` | [Firefox password decryptor](https://github.com/unode/firefox_decrypt) |
-| `godpotato-net2.exe` | [Potato priv-esc for .NET 2](https://github.com/BeichenDream/GodPotato) |
-| `godpotato-net35.exe` | [Potato priv-esc for .NET 3.5](https://github.com/BeichenDream/GodPotato) |
-| `godpotato-net4.exe` | [Potato priv-esc for .NET 4](https://github.com/BeichenDream/GodPotato) |
-| `group3r.exe` | [GPO parser](https://github.com/Group3r/Group3r) |
+| `GodPotato-NET2.exe` | [Potato priv-esc for .NET 2](https://github.com/BeichenDream/GodPotato) |
+| `GodPotato-NET35.exe` | [Potato priv-esc for .NET 3.5](https://github.com/BeichenDream/GodPotato) |
+| `GodPotato-NET4.exe` | [Potato priv-esc for .NET 4](https://github.com/BeichenDream/GodPotato) |
+| `Group3r.exe` | [GPO parser](https://github.com/Group3r/Group3r) |
 | `hack-browser-data.exe` | [Browser credential extractor](https://github.com/moonD4rk/HackBrowserData) |
-| `inveigh.exe` | [Windows mitm/spoofing toolkit](https://github.com/Kevin-Robertson/Inveigh) |
-| `invoke-sigmapotato.ps1` | [SigmaPotato in-memory helper](https://github.com/tylerdotrar/SigmaPotato) |
+| `Inveigh.exe` | [Windows mitm/spoofing toolkit](https://github.com/Kevin-Robertson/Inveigh) |
+| `Invoke-SigmaPotato.ps1` | [SigmaPotato in-memory helper](https://github.com/tylerdotrar/SigmaPotato) |
 | `john.smith.txt` | [Likely username wordlist](https://github.com/insidetrust/statistically-likely-usernames) |
 | `johnsmith.txt` | [Likely username wordlist](https://github.com/insidetrust/statistically-likely-usernames) |
 | `jsmith.txt` | [Likely username wordlist](https://github.com/insidetrust/statistically-likely-usernames) |
 | `jsmith2.txt` | [Likely username wordlist](https://github.com/insidetrust/statistically-likely-usernames) |
-| `juicypotato.exe` | [Windows potato priv-esc (legacy)](https://github.com/ohpe/juicy-potato) |
-| `juicypotatong.exe` | [JuicyPotato successor for Win10 1809+](https://github.com/antonioCoco/JuicyPotatoNG) |
+| `JuicyPotato.exe` | [Windows potato priv-esc (legacy)](https://github.com/ohpe/juicy-potato) |
+| `JuicyPotatoNG.exe` | [JuicyPotato successor for Win10 1809+](https://github.com/antonioCoco/JuicyPotatoNG) |
 | `kerbrute_linux_amd64` | [Kerberos user enum (Linux)](https://github.com/ropnop/kerbrute) |
 | `kerbrute_windows_amd64.exe` | [Kerberos user enum (Windows)](https://github.com/ropnop/kerbrute) |
-| `lapstoolkit.ps1` | [LAPS enumeration toolkit](https://github.com/leoloobeek/LAPSToolkit) |
-| `lazagne.exe` | [Credential recovery tool](https://github.com/AlessandroZ/LaZagne) |
+| `LAPSToolkit.ps1` | [LAPS enumeration toolkit](https://github.com/leoloobeek/LAPSToolkit) |
+| `LaZagne.exe` | [Credential recovery tool](https://github.com/AlessandroZ/LaZagne) |
 | `ligolo-agent` | [Ligolo-ng agent (Linux)](https://github.com/nicocha30/ligolo-ng) |
 | `ligolo-agent.exe` | [Ligolo-ng agent (Windows)](https://github.com/nicocha30/ligolo-ng) |
 | `ligolo-proxy` | [Ligolo-ng proxy (Linux)](https://github.com/nicocha30/ligolo-ng) |
@@ -325,41 +312,47 @@ Flags and examples are in each upstream README (linked from the inventory).
 | `nc-x86.exe` | [Static netcat Windows x86](https://github.com/mermehr/static-binaries) |
 | `nmap` | [Static nmap Linux binary](https://github.com/andrew-d/static-binaries) |
 | `nmap.exe` | [Static nmap Windows binary](https://github.com/andrew-d/static-binaries) |
-| `powerhuntshares.psm1` | [Share hunting PowerShell module](https://github.com/NetSPI/PowerHuntShares) |
-| `powerup.ps1` | [Windows priv-esc checks](https://github.com/PowerShellMafia/PowerSploit) |
-| `powerview.ps1` | [AD situational awareness](https://github.com/PowerShellMafia/PowerSploit) |
+| `PowerHuntShares.psm1` | [Share hunting PowerShell module](https://github.com/NetSPI/PowerHuntShares) |
+| `PowerUp.ps1` | [Windows priv-esc checks](https://github.com/PowerShellMafia/PowerSploit) |
+| `PowerView.ps1` | [AD situational awareness](https://github.com/PowerShellMafia/PowerSploit) |
 | `pretender` | [LLMNR/NBT-NS/mDNS spoofing](https://github.com/RedTeamPentesting/pretender) |
 | `pretender.exe` | [LLMNR/NBT-NS/mDNS spoofing](https://github.com/RedTeamPentesting/pretender) |
 | `printerbug.py` | [MS-RPRN coercion helper](https://github.com/dirkjanm/krbrelayx) |
-| `privhound.ps1` | [BloodHound OpenGraph local-privesc collector](https://github.com/dazzyddos/PrivHound) |
-| `printspoofer32.exe` | [PrintSpooler priv-esc (x86)](https://github.com/itm4n/PrintSpoofer) |
-| `printspoofer64.exe` | [PrintSpooler priv-esc (x64)](https://github.com/itm4n/PrintSpoofer) |
+| `PrivHound.ps1` | [BloodHound OpenGraph local-privesc collector](https://github.com/dazzyddos/PrivHound) |
+| `PrintSpoofer32.exe` | [PrintSpooler priv-esc (x86)](https://github.com/itm4n/PrintSpoofer) |
+| `PrintSpoofer64.exe` | [PrintSpooler priv-esc (x64)](https://github.com/itm4n/PrintSpoofer) |
+| `PrivescCheck.ps1` | [Windows privilege escalation checks](https://github.com/itm4n/PrivescCheck) |
 | `pspy32` | [Linux process monitor (x86)](https://github.com/DominicBreuker/pspy) |
 | `pspy64` | [Linux process monitor (x64)](https://github.com/DominicBreuker/pspy) |
-| `pssqlite.psd1` | [SQLite PowerShell module](https://github.com/RamblingCookieMonster/PSSQLite) |
-| `rogueoxidresolver.exe` | [RoguePotato Oxid resolver](https://github.com/antonioCoco/RoguePotato) |
-| `roguepotato.exe` | [RoguePotato priv-esc](https://github.com/antonioCoco/RoguePotato) |
+| `PSSQLite.psd1` | [SQLite PowerShell module](https://github.com/RamblingCookieMonster/PSSQLite) |
+| `pyGPOAbuse/` | [Python GPO edit-rights tool](https://github.com/Hackndo/pyGPOAbuse) |
+| `RogueOxidResolver.exe` | [RoguePotato Oxid resolver](https://github.com/antonioCoco/RoguePotato) |
+| `RoguePotato.exe` | [RoguePotato priv-esc](https://github.com/antonioCoco/RoguePotato) |
 | `roothound/` | [RootHound Linux privesc mapper (full repo)](https://github.com/Noz2/RootHound) |
-| `runascs.exe` | [RunasCs privilege tool](https://github.com/antonioCoco/RunasCs) |
-| `runascs_net2.exe` | [RunasCs for .NET 2](https://github.com/antonioCoco/RunasCs) |
+| `RunasCs.exe` | [RunasCs privilege tool](https://github.com/antonioCoco/RunasCs) |
+| `RunasCs_net2.exe` | [RunasCs for .NET 2](https://github.com/antonioCoco/RunasCs) |
 | `rusthound-ce` | [BloodHound CE collector, incl. certificates (Linux)](https://github.com/g0h4n/RustHound-CE) |
 | `rusthound-ce.exe` | [BloodHound CE collector, incl. certificates (Windows)](https://github.com/g0h4n/RustHound-CE) |
-| `seatbelt.exe` | [GhostPack host survey](https://github.com/r3motecontrol/Ghostpack-CompiledBinaries) |
-| `sebackupprivilegecmdlets.dll` | [SeBackupPrivilege PowerShell cmdlets](https://github.com/giuliano108/SeBackupPrivilege) |
-| `sebackupprivilegeutils.dll` | [SeBackupPrivilege native helper](https://github.com/giuliano108/SeBackupPrivilege) |
-| `sharphound.exe` | [BloodHound AD collector](https://github.com/SpecterOps/SharpHound) |
-| `sharphound.ps1` | [BloodHound AD collector (PowerShell)](https://github.com/SpecterOps/SharpHound) |
-| `sharpup.exe` | [GhostPack priv-esc checks](https://github.com/r3motecontrol/Ghostpack-CompiledBinaries) |
-| `sigmapotato.exe` | [GodPotato fork (.NET 4.8)](https://github.com/tylerdotrar/SigmaPotato) |
-| `sigmapotatocore.exe` | [SigmaPotato for .NET 3.5 / PS Core reflection](https://github.com/tylerdotrar/SigmaPotato) |
+| `Seatbelt.exe` | [GhostPack host survey](https://github.com/r3motecontrol/Ghostpack-CompiledBinaries) |
+| `SeBackupPrivilegeCmdLets.dll` | [SeBackupPrivilege PowerShell cmdlets](https://github.com/giuliano108/SeBackupPrivilege) |
+| `SeBackupPrivilegeUtils.dll` | [SeBackupPrivilege native helper](https://github.com/giuliano108/SeBackupPrivilege) |
+| `SharpGPOAbuse.exe` | [GPO edit-rights tool](https://github.com/ReversecLabs/SharpGPOAbuse) ([.NET 4.0 AnyCPU build](https://github.com/Flangvik/SharpCollection); upstream ships source only) |
+| `SharpHound.exe` | [BloodHound AD collector](https://github.com/SpecterOps/SharpHound) |
+| `SharpHound.ps1` | [BloodHound AD collector (PowerShell)](https://github.com/SpecterOps/SharpHound) |
+| `SharpUp.exe` | [GhostPack priv-esc checks](https://github.com/r3motecontrol/Ghostpack-CompiledBinaries) |
+| `SigmaPotato.exe` | [GodPotato fork (.NET 4.8)](https://github.com/tylerdotrar/SigmaPotato) |
+| `SigmaPotatoCore.exe` | [SigmaPotato for .NET 3.5 / PS Core reflection](https://github.com/tylerdotrar/SigmaPotato) |
 | `smtp-user-enum.py` | [SMTP user enumeration](https://github.com/cytopia/smtp-user-enum) |
-| `snaffler.exe` | [AD share content finder](https://github.com/SnaffCon/Snaffler) |
+| `Snaffler.exe` | [AD share content finder](https://github.com/SnaffCon/Snaffler) |
 | `socat` | [Static socat Linux binary](https://github.com/andrew-d/static-binaries) |
 | `socatx64.exe` | [Static socat Windows x64](https://github.com/3ndG4me/socat) |
 | `socatx86.exe` | [Static socat Windows x86](https://github.com/3ndG4me/socat) |
-| `sweetpotato.exe` | [SweetPotato priv-esc](https://github.com/uknowsec/SweetPotato) |
+| `strings.exe` | [Sysinternals strings (x86)](https://learn.microsoft.com/en-us/sysinternals/downloads/strings) |
+| `strings64.exe` | [Sysinternals strings (x64)](https://learn.microsoft.com/en-us/sysinternals/downloads/strings) |
+| `strings64a.exe` | [Sysinternals strings (ARM64)](https://learn.microsoft.com/en-us/sysinternals/downloads/strings) |
+| `SweetPotato.exe` | [SweetPotato priv-esc](https://github.com/uknowsec/SweetPotato) |
 | `udpx` | [UDP service scanner (Linux)](https://github.com/nullt3r/udpx) |
 | `udpx.exe` | [UDP service scanner (Windows)](https://github.com/nullt3r/udpx) |
 | `wesng/` | [Windows Exploit Suggester NG](https://github.com/bitsadmin/wesng) |
-| `winpeasx64.exe` | [Windows priv-esc enumerator](https://github.com/peass-ng/PEASS-ng) |
-| `winpeasx86.exe` | [Windows priv-esc enumerator](https://github.com/peass-ng/PEASS-ng) |
+| `winPEASx64.exe` | [Windows priv-esc enumerator](https://github.com/peass-ng/PEASS-ng) |
+| `winPEASx86.exe` | [Windows priv-esc enumerator](https://github.com/peass-ng/PEASS-ng) |

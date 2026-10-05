@@ -8,12 +8,7 @@
         "^winPEASx86\\.exe$",
         "^winPEASx64\\.exe$",
         "^linpeas\\.sh$"
-      ],
-      "rename": {
-        "^winPEASx86\\.exe$": "$lower",
-        "^winPEASx64\\.exe$": "$lower",
-        "^linpeas\\.sh$": "$lower"
-      }
+      ]
     },
     {
       "name": "pretender",
@@ -23,10 +18,6 @@
         "^pretender_Linux_x86_64\\.tar\\.gz$",
         "^pretender_Windows_x86_64\\.zip$"
       ],
-      "rename": {
-        "^pretender_Linux_x86_64\\.tar\\.gz$": "$lower",
-        "^pretender_Windows_x86_64\\.zip$": "$lower"
-      },
       "extract": true,
       "extract_keep": [
         "^pretender$",
@@ -40,9 +31,6 @@
       "assets": [
         "^Inveigh-net10\\.0-win-x64-trimmed-single-.*\\.zip$"
       ],
-      "rename": {
-        "^Inveigh-net10\\.0-win-x64-trimmed-single-.*\\.zip$": "$lower"
-      },
       "extract": true,
       "extract_keep": [
         "^Inveigh\\.exe$"
@@ -55,11 +43,7 @@
       "assets": [
         "^kerbrute_linux_amd64$",
         "^kerbrute_windows_amd64\\.exe$"
-      ],
-      "rename": {
-        "^kerbrute_linux_amd64$": "$lower",
-        "^kerbrute_windows_amd64\\.exe$": "$lower"
-      }
+      ]
     },
     {
       "name": "snaffler",
@@ -67,10 +51,7 @@
       "repo": "SnaffCon/Snaffler",
       "assets": [
         "^Snaffler\\.exe$"
-      ],
-      "rename": {
-        "^Snaffler\\.exe$": "$lower"
-      }
+      ]
     },
     {
       "name": "group3r",
@@ -78,10 +59,7 @@
       "repo": "Group3r/Group3r",
       "assets": [
         "^Group3r\\.exe$"
-      ],
-      "rename": {
-        "^Group3r\\.exe$": "$lower"
-      }
+      ]
     },
     {
       "name": "hackbrowserdata",
@@ -90,9 +68,6 @@
       "assets": [
         "windows-64bit\\.zip$"
       ],
-      "rename": {
-        "windows-64bit\\.zip$": "$lower"
-      },
       "extract": true,
       "extract_keep": [
         "^hack-browser-data\\.exe$"
@@ -104,10 +79,7 @@
       "repo": "AlessandroZ/LaZagne",
       "assets": [
         "^LaZagne\\.exe$"
-      ],
-      "rename": {
-        "^LaZagne\\.exe$": "$lower"
-      }
+      ]
     },
     {
       "name": "runascs",
@@ -116,9 +88,6 @@
       "assets": [
         "^RunasCs\\.zip$"
       ],
-      "rename": {
-        "^RunasCs\\.zip$": "$lower"
-      },
       "extract": true,
       "extract_keep": [
         "^RunasCs\\.exe$",
@@ -132,9 +101,6 @@
       "assets": [
         "linux-amd64\\.tar\\.gz$"
       ],
-      "rename": {
-        "linux-amd64\\.tar\\.gz$": "$lower"
-      },
       "extract": true,
       "extract_keep": [
         "^bloodhound-cli$"
@@ -147,9 +113,6 @@
       "assets": [
         "^SharpHound_v[0-9.]+_windows_x86\\.zip$"
       ],
-      "rename": {
-        "^SharpHound_v[0-9.]+_windows_x86\\.zip$": "$lower"
-      },
       "extract": true,
       "extract_keep": [
         "^SharpHound\\.exe$",
@@ -164,10 +127,6 @@
         "^rusthound-ce-Linux-gnu-x86_64\\.tar\\.gz$",
         "^rusthound-ce-Windows-msvc-x86_64\\.zip$"
       ],
-      "rename": {
-        "^rusthound-ce-Linux-gnu-x86_64\\.tar\\.gz$": "$lower",
-        "^rusthound-ce-Windows-msvc-x86_64\\.zip$": "$lower"
-      },
       "extract": true,
       "extract_keep": [
         "^rusthound-ce$",
@@ -181,9 +140,6 @@
       "assets": [
         "^mimikatz_trunk\\.zip$"
       ],
-      "rename": {
-        "^mimikatz_trunk\\.zip$": "$lower"
-      },
       "extract": true,
       "extract_dir": "mimikatz"
     },
@@ -196,12 +152,7 @@
         "binaries/linux/x86_64/socat",
         "binaries/linux/x86_64/nmap",
         "binaries/windows/x86/nmap.exe"
-      ],
-      "rename": {
-        "^socat$": "$lower",
-        "^nmap$": "$lower",
-        "^nmap\\.exe$": "$lower"
-      }
+      ]
     },
     {
       "name": "static-socat-windows",
@@ -210,11 +161,7 @@
       "assets": [
         "^socatx64\\.exe$",
         "^socatx86\\.exe$"
-      ],
-      "rename": {
-        "^socatx64\\.exe$": "$lower",
-        "^socatx86\\.exe$": "$lower"
-      }
+      ]
     },
     {
       "name": "likely-usernames",
@@ -226,13 +173,7 @@
         "jsmith2.txt",
         "john.smith.txt",
         "johnsmith.txt"
-      ],
-      "rename": {
-        "^jsmith\\.txt$": "$lower",
-        "^jsmith2\\.txt$": "$lower",
-        "^john\\.smith\\.txt$": "$lower",
-        "^johnsmith\\.txt$": "$lower"
-      }
+      ]
     },
     {
       "name": "domainpasswordspray",
@@ -241,10 +182,7 @@
       "ref": "master",
       "paths": [
         "DomainPasswordSpray.ps1"
-      ],
-      "rename": {
-        "^DomainPasswordSpray\\.ps1$": "$lower"
-      }
+      ]
     },
     {
       "name": "krbrelayx-printerbug",
@@ -253,10 +191,7 @@
       "ref": "master",
       "paths": [
         "printerbug.py"
-      ],
-      "rename": {
-        "^printerbug\\.py$": "$lower"
-      }
+      ]
     },
     {
       "name": "smtp-user-enum",
@@ -278,11 +213,7 @@
       "paths": [
         "Seatbelt.exe",
         "SharpUp.exe"
-      ],
-      "rename": {
-        "^Seatbelt\\.exe$": "$lower",
-        "^SharpUp\\.exe$": "$lower"
-      }
+      ]
     },
     {
       "name": "powerhuntshares",
@@ -291,10 +222,7 @@
       "ref": "main",
       "paths": [
         "PowerHuntShares.psm1"
-      ],
-      "rename": {
-        "^PowerHuntShares\\.psm1$": "$lower"
-      }
+      ]
     },
     {
       "name": "pssqlite",
@@ -303,10 +231,7 @@
       "ref": "master",
       "paths": [
         "PSSQLite/PSSQLite.psd1"
-      ],
-      "rename": {
-        "^PSSQLite\\.psd1$": "$lower"
-      }
+      ]
     },
     {
       "name": "firefox_decrypt",
@@ -315,10 +240,7 @@
       "ref": "main",
       "paths": [
         "firefox_decrypt.py"
-      ],
-      "rename": {
-        "^firefox_decrypt\\.py$": "$lower"
-      }
+      ]
     },
     {
       "name": "powersploit",
@@ -328,11 +250,7 @@
       "paths": [
         "Privesc/PowerUp.ps1",
         "Recon/PowerView.ps1"
-      ],
-      "rename": {
-        "^PowerUp\\.ps1$": "$lower",
-        "^PowerView\\.ps1$": "$lower"
-      }
+      ]
     },
     {
       "name": "lapstoolkit",
@@ -341,10 +259,7 @@
       "ref": "master",
       "paths": [
         "LAPSToolkit.ps1"
-      ],
-      "rename": {
-        "^LAPSToolkit\\.ps1$": "$lower"
-      }
+      ]
     },
     {
       "name": "roothound",
@@ -359,10 +274,7 @@
       "ref": "main",
       "paths": [
         "PrivHound.ps1"
-      ],
-      "rename": {
-        "^PrivHound\\.ps1$": "$lower"
-      }
+      ]
     },
     {
       "name": "wesng",
@@ -378,11 +290,7 @@
       "paths": [
         "SeBackupPrivilegeCmdLets/bin/Debug/SeBackupPrivilegeCmdLets.dll",
         "SeBackupPrivilegeCmdLets/bin/Debug/SeBackupPrivilegeUtils.dll"
-      ],
-      "rename": {
-        "^SeBackupPrivilegeCmdLets\\.dll$": "$lower",
-        "^SeBackupPrivilegeUtils\\.dll$": "$lower"
-      }
+      ]
     },
     {
       "name": "pspy",
@@ -391,11 +299,7 @@
       "assets": [
         "^pspy32$",
         "^pspy64$"
-      ],
-      "rename": {
-        "^pspy32$": "$lower",
-        "^pspy64$": "$lower"
-      }
+      ]
     },
     {
       "name": "linux-smart-enumeration",
@@ -404,10 +308,7 @@
       "ref": "master",
       "paths": [
         "lse.sh"
-      ],
-      "rename": {
-        "^lse\\.sh$": "$lower"
-      }
+      ]
     },
     {
       "name": "printspoofer",
@@ -416,11 +317,7 @@
       "assets": [
         "^PrintSpoofer32\\.exe$",
         "^PrintSpoofer64\\.exe$"
-      ],
-      "rename": {
-        "^PrintSpoofer32\\.exe$": "$lower",
-        "^PrintSpoofer64\\.exe$": "$lower"
-      }
+      ]
     },
     {
       "name": "godpotato",
@@ -431,12 +328,7 @@
         "^GodPotato-NET2\\.exe$",
         "^GodPotato-NET35\\.exe$",
         "^GodPotato-NET4\\.exe$"
-      ],
-      "rename": {
-        "^GodPotato-NET2\\.exe$": "$lower",
-        "^GodPotato-NET35\\.exe$": "$lower",
-        "^GodPotato-NET4\\.exe$": "$lower"
-      }
+      ]
     },
     {
       "name": "juicy-potato",
@@ -445,10 +337,7 @@
       "repo": "ohpe/juicy-potato",
       "assets": [
         "^JuicyPotato\\.exe$"
-      ],
-      "rename": {
-        "^JuicyPotato\\.exe$": "$lower"
-      }
+      ]
     },
     {
       "name": "juicy-potato-ng",
@@ -458,9 +347,6 @@
       "assets": [
         "^JuicyPotatoNG\\.zip$"
       ],
-      "rename": {
-        "^JuicyPotatoNG\\.zip$": "$lower"
-      },
       "extract": true,
       "extract_keep": [
         "^JuicyPotatoNG\\.exe$"
@@ -474,11 +360,7 @@
       "assets": [
         "^SigmaPotato\\.exe$",
         "^SigmaPotatoCore\\.exe$"
-      ],
-      "rename": {
-        "^SigmaPotato\\.exe$": "$lower",
-        "^SigmaPotatoCore\\.exe$": "$lower"
-      }
+      ]
     },
     {
       "name": "sigmapotato-ps1",
@@ -488,10 +370,7 @@
       "ref": "main",
       "paths": [
         "Invoke-SigmaPotato.ps1"
-      ],
-      "rename": {
-        "^Invoke-SigmaPotato\\.ps1$": "$lower"
-      }
+      ]
     },
     {
       "name": "sweetpotato",
@@ -501,10 +380,7 @@
       "ref": "master",
       "paths": [
         "SweetPotato-Webshell-new/bin/Release/SweetPotato.exe"
-      ],
-      "rename": {
-        "^SweetPotato\\.exe$": "$lower"
-      }
+      ]
     },
     {
       "name": "roguepotato",
@@ -514,9 +390,6 @@
       "assets": [
         "^RoguePotato\\.zip$"
       ],
-      "rename": {
-        "^RoguePotato\\.zip$": "$lower"
-      },
       "extract": true,
       "extract_keep": [
         "^RoguePotato\\.exe$",
@@ -560,11 +433,7 @@
       "artifacts": [
         "^udpx$",
         "^udpx\\.exe$"
-      ],
-      "rename": {
-        "^udpx$": "$lower",
-        "^udpx\\.exe$": "$lower"
-      }
+      ]
     },
     {
       "name": "static-netcat",
@@ -576,13 +445,30 @@
         "binaries/nc/nc-x86",
         "binaries/nc/nc-x64.exe",
         "binaries/nc/nc-x86.exe"
-      ],
-      "rename": {
-        "^nc-x64$": "$lower",
-        "^nc-x86$": "$lower",
-        "^nc-x64\\.exe$": "$lower",
-        "^nc-x86\\.exe$": "$lower"
-      }
+      ]
+    },
+    {
+      "name": "privesccheck",
+      "type": "release",
+      "repo": "itm4n/PrivescCheck",
+      "assets": [
+        "^PrivescCheck\\.ps1$"
+      ]
+    },
+    {
+      "name": "sharpgpoabuse",
+      "type": "file",
+      "repo": "Flangvik/SharpCollection",
+      "ref": "master",
+      "paths": [
+        "NetFramework_4.0_Any/SharpGPOAbuse.exe"
+      ]
+    },
+    {
+      "name": "pyGPOAbuse",
+      "type": "repo",
+      "repo": "Hackndo/pyGPOAbuse",
+      "ref": "master"
     }
   ]
 }
